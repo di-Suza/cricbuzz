@@ -1,0 +1,10 @@
+.Container{
+  display: flex;
+  gap: 50px;
+  padding: 50px;
+}
+
+.Card:hover{
+  scale: 1.1;
+  transition: all 0.5 ease;
+}
