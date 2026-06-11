@@ -1,8 +1,7 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 
-import env from '../../config/env.js';
 import { ConflictError, UnauthorizedError } from '../../shared/errors/index.js';
+import jwtTokenService from '../../shared/utils/jwtToken.js';
 import userRepository from '../users/user.repository.js';
 
 class AuthService {
@@ -10,16 +9,8 @@ class AuthService {
     this.repository = repository;
   }
 
-  signToken(user) {
-    return jwt.sign(
-      {
-        id: user._id.toString(),
-        role: user.role,
-        email: user.email,
-      },
-      env.JWT_SECRET,
-      { expiresIn: env.JWT_EXPIRES_IN }
-    );
+  signAccessToken(user) {
+    return jwtTokenService.signAccessToken(user);
   }
 
   sanitizeUser(user) {
@@ -41,7 +32,7 @@ class AuthService {
 
     return {
       user: this.sanitizeUser(user),
-      token: this.signToken(user),
+      accessToken: this.signAccessToken(user),
     };
   }
 
@@ -60,7 +51,7 @@ class AuthService {
 
     return {
       user: this.sanitizeUser(user),
-      token: this.signToken(user),
+      accessToken: this.signAccessToken(user),
     };
   }
 }

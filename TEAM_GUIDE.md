@@ -164,6 +164,21 @@ Env validation yahan hoti hai using Zod.
 
 Important: Zod sirf env validation ke liye use hoga. API validation ke liye `express-validator`.
 
+JWT keys env me base64 encoded PEM format me rahengi:
+
+- `JWT_PRIVATE_KEY_BASE64`
+- `JWT_PUBLIC_KEY_BASE64`
+- `ACCESS_TOKEN_EXPIRES_IN`
+- `REFRESH_TOKEN_EXPIRES_IN`
+
+Refresh token cookie config:
+
+- `REFRESH_COOKIE_NAME`
+- `REFRESH_COOKIE_MAX_AGE_MS`
+- `COOKIE_SECURE`
+- `COOKIE_SAME_SITE`
+- `COOKIE_DOMAIN`
+
 ### `api/src/config/db.js`
 
 MongoDB connection class.
@@ -219,6 +234,24 @@ Common express-validator helpers:
 - `query`
 - `objectIdParam`
 - `idParamRules`
+
+### `utils/jwtToken.js`
+
+JWT sign/verify ka common utility hai.
+
+- Private key se access/refresh token sign hoga.
+- Public key se access/refresh token verify hoga.
+- Env key base64 encoded hogi, utility usko decode karke PEM key use karegi.
+
+### `utils/authCookie.js`
+
+Refresh token cookie ka helper hai.
+
+- `setRefreshToken(res, token)`
+- `clearRefreshToken(res)`
+- `getRefreshToken(req)`
+
+Actual login/refresh/logout route me ye helper use hoga.
 
 ## 7. API Auth/RBAC
 
