@@ -1,3 +1,4 @@
+import AuthCookie from '../../shared/utils/authCookie.js';
 import asyncHandler from '../../shared/utils/asyncHandler.js';
 import authService from './auth.service.js';
 
@@ -9,13 +10,15 @@ class AuthController {
   }
 
   async register(req, res) {
-    const data = await this.service.register(req.body);
-    res.status(201).json({ success: true, data });
+    const data = await this.service.register(req.body, req);
+    AuthCookie.setRefreshToken(res, data.refreshToken);
+    res.status(201).json({ success: true, data: { user: data.user, accessToken: data.accessToken } });
   }
 
   async login(req, res) {
-    const data = await this.service.login(req.body);
-    res.json({ success: true, data });
+    const data = await this.service.login(req.body, req);
+    AuthCookie.setRefreshToken(res, data.refreshToken);
+    res.json({ success: true, data: { user: data.user, accessToken: data.accessToken } });
   }
 }
 
