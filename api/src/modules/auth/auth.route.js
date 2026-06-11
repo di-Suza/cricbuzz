@@ -13,6 +13,7 @@ class AuthRoutes {
   register() {
     this.router.post('/register', validateRequest(registerRules), authController.register);
     this.router.post('/login', validateRequest(loginRules), authController.login);
+    this.router.post('/refresh', authController.refresh);
   }
 
   getRouter() {

@@ -58,6 +58,7 @@ const envSchema = z
       });
     }
   });
+console.log(process.env);
 
 const result = envSchema.safeParse(process.env);
 
