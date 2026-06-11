@@ -1,4 +1,5 @@
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import express from 'express';
 
 import env from './config/env.js';
@@ -53,6 +54,7 @@ class App {
     );
     this.app.use(express.json({ limit: '5mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '5mb' }));
+    this.app.use(cookieParser());
     this.app.use(apiRateLimiter);
   }
 

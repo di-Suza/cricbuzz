@@ -1,7 +1,5 @@
-import jwt from 'jsonwebtoken';
-
-import env from '../../config/env.js';
 import { ForbiddenError, UnauthorizedError } from '../errors/index.js';
+import jwtTokenService from '../utils/jwtToken.js';
 
 class AuthMiddleware {
   static authenticate(req, _res, next) {
@@ -13,7 +11,7 @@ class AuthMiddleware {
         throw new UnauthorizedError('Missing bearer token');
       }
 
-      req.user = jwt.verify(token, env.JWT_SECRET);
+      req.user = jwtTokenService.verifyAccessToken(token);
       return next();
     } catch (error) {
       if (error.isOperational) return next(error);

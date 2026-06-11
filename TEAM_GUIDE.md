@@ -12,6 +12,7 @@ Root se commands:
 ```bash
 npm run dev:api
 npm run dev:web
+npm run seed:super-admin
 npm run check:api
 npm run build:web
 ```
@@ -108,6 +109,22 @@ Ye internally chalata hai:
 npm --prefix web run dev
 ```
 
+Super admin seed:
+
+```bash
+npm run seed:super-admin
+```
+
+Iske liye `api/.env` me ye values honi chahiye:
+
+```txt
+SUPER_ADMIN_NAME=Super Admin
+SUPER_ADMIN_EMAIL=superadmin@example.com
+SUPER_ADMIN_PASSWORD=strong-password-here
+```
+
+Production me ye values secret manager ya protected env se dena, code me hardcode ya commit mat karna.
+
 Root package me app dependencies mat daalna jab tak truly workspace-level dependency na ho.
 
 ## 5. API Core Files
@@ -146,6 +163,21 @@ Yahin public aur admin routes mount hote hain.
 Env validation yahan hoti hai using Zod.
 
 Important: Zod sirf env validation ke liye use hoga. API validation ke liye `express-validator`.
+
+JWT keys env me base64 encoded PEM format me rahengi:
+
+- `JWT_PRIVATE_KEY_BASE64`
+- `JWT_PUBLIC_KEY_BASE64`
+- `ACCESS_TOKEN_EXPIRES_IN`
+- `REFRESH_TOKEN_EXPIRES_IN`
+
+Refresh token cookie config:
+
+- `REFRESH_COOKIE_NAME`
+- `REFRESH_COOKIE_MAX_AGE_MS`
+- `COOKIE_SECURE`
+- `COOKIE_SAME_SITE`
+- `COOKIE_DOMAIN`
 
 ### `api/src/config/db.js`
 
@@ -202,6 +234,24 @@ Common express-validator helpers:
 - `query`
 - `objectIdParam`
 - `idParamRules`
+
+### `utils/jwtToken.js`
+
+JWT sign/verify ka common utility hai.
+
+- Private key se access/refresh token sign hoga.
+- Public key se access/refresh token verify hoga.
+- Env key base64 encoded hogi, utility usko decode karke PEM key use karegi.
+
+### `utils/authCookie.js`
+
+Refresh token cookie ka helper hai.
+
+- `setRefreshToken(res, token)`
+- `clearRefreshToken(res)`
+- `getRefreshToken(req)`
+
+Actual login/refresh/logout route me ye helper use hoga.
 
 ## 7. API Auth/RBAC
 
