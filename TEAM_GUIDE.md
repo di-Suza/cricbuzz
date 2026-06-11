@@ -12,6 +12,7 @@ Root se commands:
 ```bash
 npm run dev:api
 npm run dev:web
+npm run seed:super-admin
 npm run check:api
 npm run build:web
 ```
@@ -107,6 +108,22 @@ Ye internally chalata hai:
 ```bash
 npm --prefix web run dev
 ```
+
+Super admin seed:
+
+```bash
+npm run seed:super-admin
+```
+
+Iske liye `api/.env` me ye values honi chahiye:
+
+```txt
+SUPER_ADMIN_NAME=Super Admin
+SUPER_ADMIN_EMAIL=superadmin@example.com
+SUPER_ADMIN_PASSWORD=strong-password-here
+```
+
+Production me ye values secret manager ya protected env se dena, code me hardcode ya commit mat karna.
 
 Root package me app dependencies mat daalna jab tak truly workspace-level dependency na ho.
 
