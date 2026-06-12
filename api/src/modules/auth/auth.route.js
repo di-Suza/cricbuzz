@@ -9,7 +9,7 @@ import { loginRules, registerRules } from './validators/auth.validator.js';
 class AuthRoutes {
   constructor() {
     this.router = express.Router();
-    this.register();
+    this.register(); //it's just setup method there's nothing to do with registering a user
   }
 
   register() {

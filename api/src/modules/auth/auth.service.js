@@ -47,6 +47,7 @@ class AuthService {
     return data;
   }
 
+  
   async register(payload, requester) {
     this.ensureCanCreateRole(requester, payload.role);
 
@@ -65,7 +66,7 @@ class AuthService {
     };
   }
 
-  async login(payload) {
+  async login(payload, meta) {
     const user = await this.repository.findByEmail(payload.email, { withPassword: true });
 
     if (!user) {
@@ -78,9 +79,15 @@ class AuthService {
       throw new UnauthorizedError('Invalid email or password');
     }
 
+    const accessToken = this.signAccessToken(user);
+    const refreshToken = this.signRefreshToken(user);
+
+    await this.sessionService.createSession(user, refreshToken, meta);
+
     return {
       user: this.sanitizeUser(user),
-      accessToken: this.signAccessToken(user),
+      accessToken,
+      refreshToken,
     };
   }
 
