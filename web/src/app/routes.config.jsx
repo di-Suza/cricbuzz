@@ -29,7 +29,7 @@ const protectedRoutes = [
     path: 'users',
     label: 'Users',
     module: 'User CRUD',
-    roles: [SUPER_ADMIN],
+    roles: [SUPER_ADMIN, ADMIN],
     element: <UsersPage />,
     nav: true,
   },

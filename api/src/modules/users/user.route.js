@@ -4,7 +4,12 @@ import { Roles } from '../../shared/constants/roles.js';
 import { authenticate, authorize } from '../../shared/middleware/auth.js';
 import validateRequest from '../../shared/middleware/validateRequest.js';
 import userController from './user.controller.js';
-import { idParamRules } from './validators/user.validator.js';
+import {
+  idParamRules,
+  paginationRules,
+  searchUserRules,
+  updateUserRules,
+} from './validators/user.validator.js';
 
 class UserRoutes {
   constructor() {
@@ -13,9 +18,12 @@ class UserRoutes {
   }
 
   register() {
-    this.router.use(authenticate, authorize(Roles.SUPER_ADMIN));
-    this.router.get('/', userController.getUsers);
+    this.router.use(authenticate, authorize(Roles.SUPER_ADMIN, Roles.ADMIN));
+    this.router.get('/', validateRequest(paginationRules), userController.getUsers);
+    this.router.get('/search', validateRequest(searchUserRules), userController.searchUsers);
     this.router.get('/:id', validateRequest(idParamRules), userController.getUserById);
+    this.router.patch('/:id', validateRequest(updateUserRules), userController.updateUser);
+    this.router.delete('/:id', validateRequest(idParamRules), userController.deleteUser);
   }
 
   getRouter() {
