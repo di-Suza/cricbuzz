@@ -14,10 +14,19 @@ class AuthSessionService {
     return crypto.createHash('sha256').update(refreshToken).digest('hex');
   }
 
-  getRequestMeta(req) {
+  getRequestMeta(input) {
+    if (!input) return { userAgent: null, ipAddress: null };
+
+    if (input.headers || input.socket) {
+      return {
+        userAgent: input.headers?.['user-agent'] || null,
+        ipAddress: input.ip || input.socket?.remoteAddress || null,
+      };
+    }
+
     return {
-      userAgent: req?.headers?.['user-agent'] || null,
-      ipAddress: req?.ip || req?.socket?.remoteAddress || null,
+      userAgent: input.userAgent || null,
+      ipAddress: input.ipAddress || null,
     };
   }
 
@@ -25,8 +34,8 @@ class AuthSessionService {
     return new Date(Date.now() + env.REFRESH_COOKIE_MAX_AGE_MS);
   }
 
-  createSession(user, refreshToken, req = null) {
-    const { userAgent, ipAddress } = this.getRequestMeta(req);
+  createSession(user, refreshToken, meta = null) {
+    const { userAgent, ipAddress } = this.getRequestMeta(meta);
 
     return this.repository.create({
       userId: user._id || user.id,
@@ -43,7 +52,11 @@ class AuthSessionService {
       throw new UnauthorizedError('Refresh token is required');
     }
 
-    jwtTokenService.verifyRefreshToken(refreshToken);
+    try {
+      jwtTokenService.verifyRefreshToken(refreshToken);
+    } catch (_error) {
+      throw new UnauthorizedError('Invalid or expired refresh token');
+    }
 
     const session = await this.repository.findActiveByRefreshTokenHash(this.hashRefreshToken(refreshToken));
 
