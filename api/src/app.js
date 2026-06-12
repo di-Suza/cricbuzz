@@ -27,6 +27,20 @@ import notFound from './shared/middleware/notFound.js';
 import requestLogger from './shared/middleware/requestLogger.js';
 import { apiRateLimiter, securityHeaders } from './shared/middleware/security.js';
 
+function getAllowedCorsOrigins() {
+  if (env.CORS_ORIGIN === '*') return '*';
+
+  const configuredOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean);
+  const origins = new Set(configuredOrigins);
+
+  if (env.NODE_ENV === 'development') {
+    origins.add('http://localhost:5173');
+    origins.add('http://127.0.0.1:5173');
+  }
+
+  return Array.from(origins);
+}
+
 class App {
   constructor() {
     this.app = express();
@@ -45,9 +59,11 @@ class App {
     this.app.disable('x-powered-by');
     this.app.use(requestLogger);
     this.app.use(securityHeaders);
+    const allowedOrigins = getAllowedCorsOrigins();
     this.app.use(
       cors({
-        origin: env.CORS_ORIGIN === '*' ? '*' : env.CORS_ORIGIN.split(',').map((origin) => origin.trim()),
+        origin: allowedOrigins === '*' ? true : allowedOrigins,
+        credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
       })

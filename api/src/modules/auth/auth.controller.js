@@ -1,6 +1,5 @@
 import AuthCookie from '../../shared/utils/authCookie.js';
 import asyncHandler from '../../shared/utils/asyncHandler.js';
-import AuthCookie from '../../shared/utils/authCookie.js';
 import authService from './auth.service.js';
 import authSessionService from './session/authSession.service.js';
 
