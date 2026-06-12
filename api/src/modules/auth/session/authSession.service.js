@@ -52,7 +52,11 @@ class AuthSessionService {
       throw new UnauthorizedError('Refresh token is required');
     }
 
-    jwtTokenService.verifyRefreshToken(refreshToken);
+    try {
+      jwtTokenService.verifyRefreshToken(refreshToken);
+    } catch (_error) {
+      throw new UnauthorizedError('Invalid or expired refresh token');
+    }
 
     const session = await this.repository.findActiveByRefreshTokenHash(this.hashRefreshToken(refreshToken));
 

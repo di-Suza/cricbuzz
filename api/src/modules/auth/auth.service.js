@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 
-import { ConflictError, UnauthorizedError } from '../../shared/errors/index.js';
+import { ConflictError, ForbiddenError, UnauthorizedError } from '../../shared/errors/index.js';
+import { Roles } from '../../shared/constants/roles.js';
 import jwtTokenService from '../../shared/utils/jwtToken.js';
 import userRepository from '../users/user.repository.js';
 import authSessionService from './session/authSession.service.js';
@@ -19,6 +20,26 @@ class AuthService {
     return jwtTokenService.signRefreshToken(user);
   }
 
+  ensureCanCreateRole(requester, targetRole) {
+    if (!requester) {
+      throw new UnauthorizedError('Authentication required');
+    }
+
+    if (targetRole === Roles.SUPER_ADMIN) {
+      throw new ForbiddenError('Super admin can only be created by seed command');
+    }
+
+    if (requester.role === Roles.SUPER_ADMIN && [Roles.ADMIN, Roles.SCORER].includes(targetRole)) {
+      return;
+    }
+
+    if (requester.role === Roles.ADMIN && targetRole === Roles.SCORER) {
+      return;
+    }
+
+    throw new ForbiddenError('You do not have permission to create this role');
+  }
+
   sanitizeUser(user) {
     const data = user.toObject ? user.toObject() : { ...user };
     delete data.password;
@@ -26,7 +47,10 @@ class AuthService {
     return data;
   }
 
-  async register(payload, req) {
+  
+  async register(payload, requester) {
+    this.ensureCanCreateRole(requester, payload.role);
+
     const existingUser = await this.repository.findByEmail(payload.email);
 
     if (existingUser) {
@@ -36,15 +60,9 @@ class AuthService {
     const password = await bcrypt.hash(payload.password, 10);
     const user = await this.repository.create({ ...payload, password });
 
-    const accessToken = this.signAccessToken(user);
-    const refreshToken = this.signRefreshToken(user);
-
-    await authSessionService.createSession(user, refreshToken, req);
-
     return {
       user: this.sanitizeUser(user),
-      accessToken,
-      refreshToken,
+      message: 'User created successfully',
     };
   }
 
@@ -70,6 +88,27 @@ class AuthService {
       user: this.sanitizeUser(user),
       accessToken,
       refreshToken,
+    };
+  }
+
+  async refresh(refreshToken) {
+    const session = await this.sessionService.findValidSession(refreshToken);
+    const user = await this.repository.findById(session.userId);
+
+    if (!user) {
+      throw new UnauthorizedError('Refresh session user is invalid');
+    }
+
+    return {
+      accessToken: this.signAccessToken(user),
+    };
+  }
+
+  async logout(refreshToken) {
+    await this.sessionService.revokeSession(refreshToken, 'LOGOUT');
+
+    return {
+      message: 'Logged out successfully',
     };
   }
 }
