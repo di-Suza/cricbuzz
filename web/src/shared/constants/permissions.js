@@ -1,8 +1,10 @@
 import { ADMIN, SCORER, SUPER_ADMIN } from './roles.js';
 
 const ACTION_PERMISSIONS = Object.freeze({
-  'users:create': [SUPER_ADMIN],
-  'users:read': [SUPER_ADMIN],
+  'users:create': [SUPER_ADMIN, ADMIN],
+  'users:read': [SUPER_ADMIN, ADMIN],
+  'users:update': [SUPER_ADMIN, ADMIN],
+  'users:delete': [SUPER_ADMIN, ADMIN],
   'series:manage': [SUPER_ADMIN, ADMIN],
   'teams:manage': [SUPER_ADMIN, ADMIN],
   'squads:manage': [SUPER_ADMIN, ADMIN],
