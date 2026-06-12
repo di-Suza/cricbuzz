@@ -6,6 +6,7 @@ class AuthController {
     this.service = service;
     this.register = asyncHandler(this.register.bind(this));
     this.login = asyncHandler(this.login.bind(this));
+    this.getMe = asyncHandler(this.getMe.bind(this));
   }
 
   async register(req, res) {
@@ -16,6 +17,11 @@ class AuthController {
   async login(req, res) {
     const data = await this.service.login(req.body);
     res.json({ success: true, data });
+  }
+
+  async getMe(req, res) {
+    const user = await this.service.getMe(req.user.id);
+    res.json({ success: true, data: { user } });
   }
 }
 

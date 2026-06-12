@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 
-import { ConflictError, UnauthorizedError } from '../../shared/errors/index.js';
+import { ConflictError, NotFoundError, UnauthorizedError } from '../../shared/errors/index.js';
 import jwtTokenService from '../../shared/utils/jwtToken.js';
 import userRepository from '../users/user.repository.js';
 
@@ -53,6 +53,16 @@ class AuthService {
       user: this.sanitizeUser(user),
       accessToken: this.signAccessToken(user),
     };
+  }
+
+  async getMe(userId) {
+    const user = await this.repository.findById(userId);
+
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    return this.sanitizeUser(user);
   }
 }
 
