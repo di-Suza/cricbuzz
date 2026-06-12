@@ -6,8 +6,9 @@ import userRepository from '../users/user.repository.js';
 import authSessionService from './session/authSession.service.js';
 
 class AuthService {
-  constructor(repository = userRepository) {
+  constructor(repository = userRepository, sessionService = authSessionService) {
     this.repository = repository;
+    this.sessionService = sessionService;
   }
 
   signAccessToken(user) {
@@ -47,7 +48,7 @@ class AuthService {
     };
   }
 
-  async login(payload, req) {
+  async login(payload, meta) {
     const user = await this.repository.findByEmail(payload.email, { withPassword: true });
 
     if (!user) {
@@ -63,7 +64,7 @@ class AuthService {
     const accessToken = this.signAccessToken(user);
     const refreshToken = this.signRefreshToken(user);
 
-    await authSessionService.createSession(user, refreshToken, req);
+    await this.sessionService.createSession(user, refreshToken, meta);
 
     return {
       user: this.sanitizeUser(user),
