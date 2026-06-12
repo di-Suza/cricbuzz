@@ -11,7 +11,9 @@ const registerRules = [
     .isLength({ min: 6, max: 128 })
     .withMessage('Password must be between 6 and 128 characters'),
   body('role')
-    .default(Roles.ADMIN)
+    .notEmpty()
+    .withMessage('Role is required')
+    .bail()
     .isIn(ROLE_LIST)
     .withMessage(`Role must be one of: ${ROLE_LIST.join(', ')}`),
 ];

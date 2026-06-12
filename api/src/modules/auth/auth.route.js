@@ -1,6 +1,8 @@
 import express from 'express';
 
 import validateRequest from '../../shared/middleware/validateRequest.js';
+import { authenticate, authorize } from '../../shared/middleware/auth.js';
+import { ADMIN, SUPER_ADMIN } from '../../shared/constants/roles.js';
 import authController from './auth.controller.js';
 import { loginRules, registerRules } from './validators/auth.validator.js';
 
@@ -11,7 +13,13 @@ class AuthRoutes {
   }
 
   register() {
-    this.router.post('/register', validateRequest(registerRules), authController.register);
+    this.router.post(
+      '/register',
+      authenticate,
+      authorize(SUPER_ADMIN, ADMIN),
+      validateRequest(registerRules),
+      authController.register
+    );
     this.router.post('/login', validateRequest(loginRules), authController.login);
     this.router.post('/refresh', authController.refresh);
   }

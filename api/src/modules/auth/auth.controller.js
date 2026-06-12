@@ -11,7 +11,7 @@ class AuthController {
   }
 
   async register(req, res) {
-    const data = await this.service.register(req.body);
+    const data = await this.service.register(req.validated, req.user);
     res.status(201).json({ success: true, data });
   }
 
