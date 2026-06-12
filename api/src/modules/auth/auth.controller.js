@@ -8,10 +8,11 @@ class AuthController {
     this.register = asyncHandler(this.register.bind(this));
     this.login = asyncHandler(this.login.bind(this));
     this.refresh = asyncHandler(this.refresh.bind(this));
+    this.logout = asyncHandler(this.logout.bind(this));
   }
 
   async register(req, res) {
-    const data = await this.service.register(req.body);
+    const data = await this.service.register(req.validated, req.user);
     res.status(201).json({ success: true, data });
   }
 
@@ -23,6 +24,13 @@ class AuthController {
   async refresh(req, res) {
     const refreshToken = AuthCookie.getRefreshToken(req);
     const data = await this.service.refresh(refreshToken);
+    res.json({ success: true, data });
+  }
+
+  async logout(req, res) {
+    const refreshToken = AuthCookie.getRefreshToken(req);
+    const data = await this.service.logout(refreshToken);
+    AuthCookie.clearRefreshToken(res);
     res.json({ success: true, data });
   }
 }
