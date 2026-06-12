@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 
-import { ConflictError, ForbiddenError, UnauthorizedError } from '../../shared/errors/index.js';
 import { Roles } from '../../shared/constants/roles.js';
+import { ConflictError, NotFoundError, UnauthorizedError } from '../../shared/errors/index.js';
 import jwtTokenService from '../../shared/utils/jwtToken.js';
 import userRepository from '../users/user.repository.js';
 import authSessionService from './session/authSession.service.js';
@@ -110,6 +110,15 @@ class AuthService {
     return {
       message: 'Logged out successfully',
     };
+  }
+  async getMe(userId) {
+    const user = await this.repository.findById(userId);
+
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    return this.sanitizeUser(user);
   }
 }
 

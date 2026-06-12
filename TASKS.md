@@ -6,6 +6,7 @@ Bhai log, auth module me 5 APIs banani hain:
 POST /api/auth/register
 POST /api/auth/login
 GET  /api/auth/me
+POST /api/auth/refresh
 POST /api/auth/logout
 ```
 

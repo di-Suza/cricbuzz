@@ -12,6 +12,7 @@ class AuthController {
     this.login = asyncHandler(this.login.bind(this));
     this.refresh = asyncHandler(this.refresh.bind(this));
     this.logout = asyncHandler(this.logout.bind(this));
+    this.getMe = asyncHandler(this.getMe.bind(this));
   }
 
   async register(req, res) {
@@ -37,6 +38,11 @@ class AuthController {
     const data = await this.service.logout(refreshToken);
     AuthCookie.clearRefreshToken(res);
     res.json({ success: true, data });
+  }
+
+  async getMe(req, res) {
+    const user = await this.service.getMe(req.user.id);
+    res.json({ success: true, data: { user } });
   }
 }
 
