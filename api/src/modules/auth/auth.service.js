@@ -96,6 +96,14 @@ class AuthService {
       accessToken: this.signAccessToken(user),
     };
   }
+
+  async logout(refreshToken) {
+    await this.sessionService.revokeSession(refreshToken, 'LOGOUT');
+
+    return {
+      message: 'Logged out successfully',
+    };
+  }
 }
 
 const authService = new AuthService();
