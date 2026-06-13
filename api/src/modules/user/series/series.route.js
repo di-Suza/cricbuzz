@@ -1,11 +1,9 @@
-import { ScaffoldRoutes } from '../../../shared/utils/moduleScaffold.js';
+import express from 'express';
 import seriesController from './series.controller.js';
 
-class SeriesPublicRoutes extends ScaffoldRoutes {
-  constructor() {
-    super(seriesController);
-  }
-}
+const router = express.Router();
 
-export { SeriesPublicRoutes };
-export default new SeriesPublicRoutes().getRouter();
+router.get('/', seriesController.getAll);
+router.get('/:id', seriesController.getById);
+
+export default router;
