@@ -81,11 +81,33 @@ Business rules:
 - `name` aur `season` unique hone chahiye.
 - Status flow: `UPCOMING -> LIVE -> COMPLETED`.
 - Series delete se pehle check karo ki koi match exist to nahi karta.
+- Series is the only module to create a new match for the series .
 
 Edge cases:
+- for series only who have minimum 11 palyer in the squad is allowd , 
 - Matches wali series delete block.
 - Duplicate name/season par conflict.
 - Series status manually change allowed for admin.
+- Koi bhe series Delete nai hoga jabtak kuch bhe scudeld match ha .
+
+
+flow:
+-ADMIN Start date and End Date (date can be edited latter),name and seasion degaa 
+-ONly allowd team will show to admin for add the teams into series
+-then We have 3 type format  A/B/C 
+  In A type :
+  All the teams are devided into two group. All the matches are allowed in who are in the same group , after that in the end 1st 2tems of every group are go for the semi final and form group A 1st team will paly with group B 1st team and group A 2nd team will play with Group B 2nd team semifinal Match 
+  in this only EVEN number of TEMAS are allowed.Then we will get 2 teams for final 
+
+  In B type :
+  The 1st 4 teams of points table will play semi-final match. 1st semi final match is "1th vs 2nd" team ,2nd semi-final match is "3rd vs 4th".Then we will get 2 teams for final.
+
+- then ADMIN  will deisde number of matches . And can edit latter if need the number of matches
+
+-Then admin will create match's ,In the time of creating matches uses select 2 temas ,date,
+
+-All the matches are shows in the matches tab in the frontend . and show the match edit button in every created match . (Admin only)
+
 
 Public visibility:
 - Series public hain.
