@@ -24,6 +24,9 @@ const envSchema = z
     SUPER_ADMIN_NAME: z.string().trim().min(2).default('Super Admin'),
     SUPER_ADMIN_EMAIL: z.string().trim().email().optional(),
     SUPER_ADMIN_PASSWORD: z.string().min(8).optional(),
+    IMAGEKIT_PUBLIC_KEY: z.string().trim().optional(),
+    IMAGEKIT_PRIVATE_KEY: z.string().trim().optional(),
+    IMAGEKIT_URL_ENDPOINT: z.string().trim().optional(),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === 'production' && env.JWT_PRIVATE_KEY_BASE64 === 'base64_encoded_private_key_here') {

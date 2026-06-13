@@ -84,14 +84,14 @@ class App {
   }
 
   registerPublicRoutes() {
-    this.app.use('/api/home', responseCache(10), publicHomeRoutes);
-    this.app.use('/api/matches/:matchId/commentary', responseCache(5), publicCommentaryRoutes);
-    this.app.use('/api/matches', responseCache(10), publicMatchRoutes);
-    this.app.use('/api/series/:seriesId/points-table', responseCache(30), publicPointsTableRoutes);
-    this.app.use('/api/search', responseCache(30), publicSearchRoutes);
-    this.app.use('/api/series', responseCache(60), publicSeriesRoutes);
-    this.app.use('/api/teams', responseCache(60), publicTeamRoutes);
-    this.app.use('/api/players', responseCache(60), publicPlayerRoutes);
+    this.app.use('/api/public/home', responseCache(10), publicHomeRoutes);
+    this.app.use('/api/public/matches/:matchId/commentary', responseCache(5), publicCommentaryRoutes);
+    this.app.use('/api/public/matches', responseCache(10), publicMatchRoutes);
+    this.app.use('/api/public/series/:seriesId/points-table', responseCache(30), publicPointsTableRoutes);
+    this.app.use('/api/public/search', responseCache(30), publicSearchRoutes);
+    this.app.use('/api/public/series', responseCache(60), publicSeriesRoutes);
+    this.app.use('/api/public/teams', responseCache(60), publicTeamRoutes);
+    this.app.use('/api/public/players', responseCache(60), publicPlayerRoutes);
   }
 
   registerAdminRoutes() {
