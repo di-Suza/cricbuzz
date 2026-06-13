@@ -132,6 +132,15 @@ class TeamRepository extends ScaffoldRepository {
     );
   }
 
+  findTeamByPlayerId(playerId) {
+    return this.model
+      .findOne({
+        isDeleted: false,
+        squadPlayers: { $in: this.getIdValues(playerId) },
+      })
+      .select('_id name shortName');
+  }
+
   countMatchDependencies(teamId) {
     const values = this.getIdValues(teamId);
 

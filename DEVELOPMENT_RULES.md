@@ -19,7 +19,7 @@ Reason:
 
 Business rules:
 - Player globally create hota hai, kisi ek team ka nahi hota.
-- Ek player multiple teams ki squad me ho sakta hai.
+- Ek active player sirf ek team squad me assigned ho sakta hai.
 - Role enum sirf ye honge: `BATSMAN`, `BOWLER`, `ALL_ROUNDER`, `WICKET_KEEPER`.
 - `battingStyle` required hai aur fixed enum se hi aayega: `RIGHT_HAND_BAT`, `LEFT_HAND_BAT`.
 - `bowlingStyle` optional hai, but agar bheja to fixed enum se hi aayega: `RIGHT_ARM_FAST`, `RIGHT_ARM_FAST_MEDIUM`, `RIGHT_ARM_MEDIUM`, `LEFT_ARM_FAST`, `LEFT_ARM_FAST_MEDIUM`, `LEFT_ARM_MEDIUM`, `RIGHT_ARM_OFF_BREAK`, `RIGHT_ARM_LEG_BREAK`, `LEFT_ARM_ORTHODOX`, `LEFT_ARM_WRIST_SPIN`.
@@ -42,6 +42,8 @@ Business rules:
 - Team create ke liye `logo` required hai.
 - `squadPlayers` team document me player ObjectId refs ka array hai.
 - Player add karne ke liye `$addToSet` use karo so duplicate add idempotent rahe.
+- Team module me sirf team identity/details manage honge: `name`, `shortName`, `logo`, `primaryColor`.
+- Player assignment Team UI se nahi hoga; squad assignment sirf Squads module se hoga.
 
 Edge cases:
 - Team delete karna ho aur koi match me involved hai to block karo.
@@ -49,7 +51,7 @@ Edge cases:
 - Same player dobara squad me add ho to silently ignore/idempotent.
 - Team squad me 10 players hain to match create block hoga.
 - Team logo update live match ke during allowed hai.
-- Team squad me 11 se zyada players add nahi hone chahiye.
+- Team squad me 20 se zyada players add nahi hone chahiye.
 
 Public visibility:
 - Teams publicly visible hain.
@@ -59,13 +61,16 @@ Public visibility:
 
 Business rules:
 - Squad team ke andar players collection hai.
+- Squads panel me teams ki list dikhegi; team select karne ke baad us team ka squad manage hoga.
 - Squad manage ke liye team aur player dono exist hone chahiye.
 - Match create se pehle minimum 11 players squad me hone chahiye.
 - Route pattern: `/api/teams/:teamId/squad`.
 
 Edge cases:
 - Non-existing player add karo to error.
+- Agar player kisi doosri team squad me assigned hai to add block karo.
 - Already existing player add karo to duplicate nahi hona chahiye.
+- 20 players ke baad squad add block karo.
 - Live match Playing XI me selected player remove karna block karo.
 - Remove ke baad squad 10 se kam ho jaye to allow, but match create later block hoga.
 - Team exist nahi karti to 404.

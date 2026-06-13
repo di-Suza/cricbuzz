@@ -45,7 +45,13 @@ class PlayerService extends ScaffoldService {
   }
 
   async getAllPlayers(query = {}) {
-    return this.repository.findAll(this.getListFilters(query), this.getPagination(query));
+    const filters = this.getListFilters(query);
+
+    if (query.availableForTeam) {
+      filters.excludeIds = await this.repository.findAssignedPlayerIds();
+    }
+
+    return this.repository.findAll(filters, this.getPagination(query));
   }
 
   async getPlayerById(id) {

@@ -20,9 +20,9 @@ function compactParams(params) {
 const playersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getPlayers: builder.query({
-      query: ({ page = 1, limit = 10, search = '', role = '', country = '' } = {}) => ({
+      query: ({ page = 1, limit = 10, search = '', role = '', country = '', availableForTeam = '' } = {}) => ({
         url: '/players',
-        params: compactParams({ page, limit, search, role, country }),
+        params: compactParams({ page, limit, search, role, country, availableForTeam }),
       }),
       transformResponse: unwrapList,
       providesTags: (result) => [

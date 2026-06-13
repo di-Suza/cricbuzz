@@ -61,32 +61,13 @@ const teamsApi = baseApi.injectEndpoints({
       transformResponse: unwrapData,
       invalidatesTags: ['Teams'],
     }),
-    assignPlayerToTeam: builder.mutation({
-      query: ({ teamId, playerId }) => ({
-        url: `/teams/${teamId}/squad`,
-        method: 'POST',
-        body: { playerId },
-      }),
-      transformResponse: unwrapData,
-      invalidatesTags: (_result, _error, { teamId }) => ['Teams', { type: 'Teams', id: teamId }],
-    }),
-    removePlayerFromTeam: builder.mutation({
-      query: ({ teamId, playerId }) => ({
-        url: `/teams/${teamId}/squad/${playerId}`,
-        method: 'DELETE',
-      }),
-      transformResponse: unwrapData,
-      invalidatesTags: (_result, _error, { teamId }) => ['Teams', { type: 'Teams', id: teamId }],
-    }),
   }),
 });
 
 export const {
-  useAssignPlayerToTeamMutation,
   useCreateTeamMutation,
   useDeleteTeamMutation,
   useGetTeamByIdQuery,
   useGetTeamsQuery,
-  useRemovePlayerFromTeamMutation,
   useUpdateTeamMutation,
 } = teamsApi;

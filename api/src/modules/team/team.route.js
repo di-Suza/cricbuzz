@@ -8,7 +8,6 @@ import {
   createTeamRules,
   idParamRules,
   teamListRules,
-  teamPlayerRules,
   updateTeamRules,
 } from './validators/team.validator.js';
 
@@ -29,10 +28,6 @@ class TeamRoutes extends ScaffoldRoutes {
     this.router.post('/', upload.single('logo'), validateRequest(createTeamRules), this.controller.create);
     this.router.patch('/:id', upload.single('logo'), validateRequest(updateTeamRules), this.controller.update);
     this.router.delete('/:id', validateRequest(idParamRules), this.controller.delete);
-
-    // Custom Squad routes
-    this.router.post('/:id/assign-player', validateRequest(teamPlayerRules), this.controller.assignPlayer);
-    this.router.post('/:id/remove-player', validateRequest(teamPlayerRules), this.controller.removePlayer);
   }
 }
 

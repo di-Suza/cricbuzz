@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
 import ConfirmModal from '../../../shared/components/ConfirmModal.jsx';
 import ModulePage from '../../../shared/components/ModulePage.jsx';
 import PaginationBar from '../../../shared/components/PaginationBar.jsx';
@@ -10,7 +9,6 @@ function TeamsPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [teamToEdit, setTeamToEdit] = useState(null);
   const [teamToDelete, setTeamToDelete] = useState(null);
@@ -18,10 +16,8 @@ function TeamsPage() {
     page,
     limit,
     search,
-    status,
   });
   const [deleteTeam, deleteState] = useDeleteTeamMutation();
-  const navigate = useNavigate();
 
   const teams = response.data || [];
   const meta = response.meta;
@@ -54,10 +50,6 @@ function TeamsPage() {
     }
   };
 
-  const handleRowClick = (id) => {
-    navigate(`/teams/${id}`);
-  };
-
   const handleLimitChange = (nextLimit) => {
     setLimit(nextLimit);
     setPage(1);
@@ -68,17 +60,12 @@ function TeamsPage() {
     setPage(1);
   };
 
-  const handleStatusChange = (event) => {
-    setStatus(event.target.value);
-    setPage(1);
-  };
-
   return (
     <>
       <ModulePage
         eyebrow="Catalogue"
         title="Teams"
-        description="Manage franchise teams, squads, and draft statuses."
+        description="Manage franchise identity, logo, short name, and display colour."
         permission="teams:manage"
         primaryAction="Create Team"
         onActionClick={handleCreate}
@@ -95,18 +82,6 @@ function TeamsPage() {
             />
           </label>
 
-          <label className="w-full sm:w-52">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</span>
-            <select
-              value={status}
-              onChange={handleStatusChange}
-              className="mt-2 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-            >
-              <option value="">All statuses</option>
-              <option value="DRAFT">Draft</option>
-              <option value="PUBLISHED">Published</option>
-            </select>
-          </label>
         </div>
 
         {isLoading ? (
@@ -120,8 +95,7 @@ function TeamsPage() {
                 <tr>
                   <th className="px-6 py-4 font-semibold">Team</th>
                   <th className="px-6 py-4 font-semibold">Short Name</th>
-                  <th className="px-6 py-4 font-semibold">Status</th>
-                  <th className="px-6 py-4 font-semibold">Squad Size</th>
+                  <th className="px-6 py-4 font-semibold">Primary Color</th>
                   <th className="px-6 py-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
@@ -129,8 +103,7 @@ function TeamsPage() {
                 {teams.map((team) => (
                   <tr 
                     key={team._id} 
-                    className="hover:bg-slate-50 transition-colors cursor-pointer"
-                    onClick={() => handleRowClick(team._id)}
+                    className="hover:bg-slate-50 transition-colors"
                   >
                     <td className="px-6 py-4 font-medium text-slate-900 flex items-center gap-3">
                       {team.logo ? (
@@ -152,20 +125,14 @@ function TeamsPage() {
                     </td>
                     <td className="px-6 py-4 font-semibold text-slate-700">{team.shortName}</td>
                     <td className="px-6 py-4">
-                      {team.status === 'PUBLISHED' ? (
-                        <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                          Ready / Published
+                      {team.primaryColor ? (
+                        <span className="inline-flex items-center gap-2 rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-200">
+                          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: team.primaryColor }} />
+                          {team.primaryColor}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
-                          Draft
-                        </span>
+                        <span className="text-slate-400">Not set</span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 font-medium">
-                      <span className={team.squadPlayers?.length === 11 ? 'text-emerald-600' : 'text-amber-600'}>
-                        {team.squadPlayers?.length || 0} / 11
-                      </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button onClick={(e) => handleEdit(team, e)} className="text-indigo-600 hover:text-indigo-900 font-medium mr-4">Edit</button>

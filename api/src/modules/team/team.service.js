@@ -104,8 +104,13 @@ class TeamService extends ScaffoldService {
     const existingTeam = await this.repository.findById(teamId);
     if (!existingTeam) throw new NotFoundError('Team not found');
 
-    if (!this.isPlayerInSquad(existingTeam, playerId) && existingTeam.squadPlayers.length >= 11) {
-      throw new BadRequestError('Team squad cannot have more than 11 players');
+    const assignedTeam = await this.repository.findTeamByPlayerId(playerId);
+    if (assignedTeam && String(assignedTeam._id) !== String(teamId)) {
+      throw new ConflictError(`Player is already assigned to ${assignedTeam.name} squad`);
+    }
+
+    if (!this.isPlayerInSquad(existingTeam, playerId) && existingTeam.squadPlayers.length >= 20) {
+      throw new BadRequestError('Team squad cannot have more than 20 players');
     }
 
     const team = await this.repository.addPlayer(teamId, playerId, this.getUserId(requester));
@@ -140,7 +145,7 @@ class TeamService extends ScaffoldService {
     const team = await this.repository.findById(teamId);
     if (!team) throw new NotFoundError('Team not found');
 
-    const status = team.squadPlayers.length === 11 ? 'PUBLISHED' : 'DRAFT';
+    const status = team.squadPlayers.length >= 11 ? 'PUBLISHED' : 'DRAFT';
     return this.repository.update(teamId, {
       status,
       ...(this.getUserId(requester) ? { updatedBy: this.getUserId(requester) } : {}),

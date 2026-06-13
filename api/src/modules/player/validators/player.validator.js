@@ -1,4 +1,4 @@
-import { body, idParamRules, query } from '../../../shared/validators/common.js';
+import { body, idParamRules, objectIdRegex, query } from '../../../shared/validators/common.js';
 import {
   PLAYER_BATTING_STYLES,
   PLAYER_BOWLING_STYLES,
@@ -83,6 +83,10 @@ const playerListRules = [
     .trim()
     .isLength({ max: 80 })
     .withMessage('Country must be at most 80 characters'),
+  query('availableForTeam')
+    .optional({ values: 'falsy' })
+    .matches(objectIdRegex)
+    .withMessage('Available team id must be a valid MongoDB ObjectId'),
 ];
 
 const updatePlayerRules = [

@@ -48,6 +48,10 @@ class PlayerRepository extends ScaffoldRepository {
   buildListQuery(filters = {}) {
     const query = { isDeleted: false };
 
+    if (filters.excludeIds?.length) {
+      query._id = { $nin: filters.excludeIds };
+    }
+
     if (filters.search) {
       query.name = { $regex: this.escapeRegex(filters.search), $options: 'i' };
     }
@@ -108,6 +112,12 @@ class PlayerRepository extends ScaffoldRepository {
       isDeleted: false,
       squadPlayers: { $in: this.getIdValues(playerId) },
     });
+  }
+
+  async findAssignedPlayerIds() {
+    const teams = await Team.find({ isDeleted: false }).select('squadPlayers');
+
+    return teams.flatMap((team) => team.squadPlayers || []);
   }
 
   countPlayingXiDependencies(playerId, options = {}) {

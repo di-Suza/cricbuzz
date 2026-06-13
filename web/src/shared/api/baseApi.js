@@ -65,7 +65,7 @@ const baseQueryWithAuth = async (args, api, extraOptions) => {
 const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithAuth,
-  tagTypes: ['Auth', 'Home', 'Users', 'Series', 'Teams', 'Players', 'Matches'],
+  tagTypes: ['Auth', 'Home', 'Users', 'Series', 'Teams', 'Players', 'Squads', 'Matches'],
   endpoints: () => ({}),
 });
 
