@@ -1,23 +1,51 @@
 import { ScaffoldService } from '../../shared/utils/moduleScaffold.js';
 import playerRepository from './player.repository.js';
 import { uploadImage } from '../../shared/utils/imagekit.js';
-import { NotFoundError } from '../../shared/errors/index.js';
+import { ConflictError, NotFoundError } from '../../shared/errors/index.js';
 
 class PlayerService extends ScaffoldService {
   constructor(repository = playerRepository) {
     super('player', repository);
   }
 
-  async createPlayer(data, file) {
-    if (file) {
-      const imageUrl = await uploadImage(file.buffer, file.originalname, 'players');
-      if (imageUrl) data.image = imageUrl;
-    }
-    return this.repository.create(data);
+  getUserId(user) {
+    return user?.id || user?._id || null;
   }
 
-  async getAllPlayers() {
-    return this.repository.findAll();
+  async createPlayer(data, file, requester = null) {
+    const payload = { ...data };
+
+    if (file) {
+      const imageUrl = await uploadImage(file.buffer, file.originalname, 'players');
+      if (imageUrl) payload.image = imageUrl;
+    }
+
+    const userId = this.getUserId(requester);
+    if (userId) {
+      payload.createdBy = userId;
+      payload.updatedBy = userId;
+    }
+
+    return this.repository.create(payload);
+  }
+
+  getPagination(query = {}) {
+    return {
+      page: query.page || 1,
+      limit: query.limit || 10,
+    };
+  }
+
+  getListFilters(query = {}) {
+    return {
+      search: query.search,
+      role: query.role,
+      country: query.country,
+    };
+  }
+
+  async getAllPlayers(query = {}) {
+    return this.repository.findAll(this.getListFilters(query), this.getPagination(query));
   }
 
   async getPlayerById(id) {
@@ -26,18 +54,39 @@ class PlayerService extends ScaffoldService {
     return player;
   }
 
-  async updatePlayer(id, data, file) {
+  async updatePlayer(id, data, file, requester = null) {
+    const payload = { ...data };
+
     if (file) {
       const imageUrl = await uploadImage(file.buffer, file.originalname, 'players');
-      if (imageUrl) data.image = imageUrl;
+      if (imageUrl) payload.image = imageUrl;
     }
-    const player = await this.repository.update(id, data);
+
+    const userId = this.getUserId(requester);
+    if (userId) {
+      payload.updatedBy = userId;
+    }
+
+    const player = await this.repository.update(id, payload);
     if (!player) throw new NotFoundError('Player not found');
     return player;
   }
 
-  async deletePlayer(id) {
-    const player = await this.repository.delete(id);
+  async deletePlayer(id, requester = null) {
+    const [squadDependencies, playingXiDependencies] = await Promise.all([
+      this.repository.countSquadDependencies(id),
+      this.repository.countPlayingXiDependencies(id),
+    ]);
+
+    if (squadDependencies > 0) {
+      throw new ConflictError('Player cannot be deleted while assigned to a team squad');
+    }
+
+    if (playingXiDependencies > 0) {
+      throw new ConflictError('Player cannot be deleted while selected in a Playing XI');
+    }
+
+    const player = await this.repository.delete(id, this.getUserId(requester));
     if (!player) throw new NotFoundError('Player not found');
     return player;
   }

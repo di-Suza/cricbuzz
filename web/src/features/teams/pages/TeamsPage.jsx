@@ -1,17 +1,30 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import ConfirmModal from '../../../shared/components/ConfirmModal.jsx';
 import ModulePage from '../../../shared/components/ModulePage.jsx';
+import PaginationBar from '../../../shared/components/PaginationBar.jsx';
 import { useGetTeamsQuery, useDeleteTeamMutation } from '../api/teamsApi.js';
 import TeamForm from './TeamForm.jsx';
 
 function TeamsPage() {
-  const { data: response, isLoading } = useGetTeamsQuery();
-  const [deleteTeam] = useDeleteTeamMutation();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [teamToEdit, setTeamToEdit] = useState(null);
+  const [teamToDelete, setTeamToDelete] = useState(null);
+  const { data: response = { data: [], meta: null }, isLoading, isFetching } = useGetTeamsQuery({
+    page,
+    limit,
+    search,
+    status,
+  });
+  const [deleteTeam, deleteState] = useDeleteTeamMutation();
   const navigate = useNavigate();
 
-  const teams = Array.isArray(response) ? response : (response?.data || []);
+  const teams = response.data || [];
+  const meta = response.meta;
 
   const handleCreate = () => {
     setTeamToEdit(null);
@@ -26,13 +39,38 @@ function TeamsPage() {
 
   const handleDelete = async (id, e) => {
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this team?')) {
-      await deleteTeam(id);
+    const team = teams.find((item) => item._id === id);
+    setTeamToDelete(team || { _id: id });
+  };
+
+  const confirmDelete = async () => {
+    if (!teamToDelete?._id) return;
+
+    try {
+      await deleteTeam(teamToDelete._id).unwrap();
+      setTeamToDelete(null);
+    } catch (error) {
+      alert(error?.data?.message || 'Unable to delete team');
     }
   };
 
   const handleRowClick = (id) => {
     navigate(`/teams/${id}`);
+  };
+
+  const handleLimitChange = (nextLimit) => {
+    setLimit(nextLimit);
+    setPage(1);
+  };
+
+  const handleSearchChange = (event) => {
+    setSearch(event.target.value);
+    setPage(1);
+  };
+
+  const handleStatusChange = (event) => {
+    setStatus(event.target.value);
+    setPage(1);
   };
 
   return (
@@ -45,6 +83,32 @@ function TeamsPage() {
         primaryAction="Create Team"
         onActionClick={handleCreate}
       >
+        <div className="flex flex-wrap items-end gap-3 border-b border-slate-200 bg-white px-4 py-4">
+          <label className="min-w-64 flex-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Search</span>
+            <input
+              type="search"
+              value={search}
+              onChange={handleSearchChange}
+              placeholder="Find by team name or short name"
+              className="mt-2 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+            />
+          </label>
+
+          <label className="w-full sm:w-52">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</span>
+            <select
+              value={status}
+              onChange={handleStatusChange}
+              className="mt-2 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+            >
+              <option value="">All statuses</option>
+              <option value="DRAFT">Draft</option>
+              <option value="PUBLISHED">Published</option>
+            </select>
+          </label>
+        </div>
+
         {isLoading ? (
           <div className="p-8 text-center text-slate-500">Loading teams...</div>
         ) : teams.length === 0 ? (
@@ -113,12 +177,35 @@ function TeamsPage() {
             </table>
           </div>
         )}
+
+        <PaginationBar
+          meta={meta}
+          limit={limit}
+          onLimitChange={handleLimitChange}
+          onPageChange={setPage}
+        />
+
+        {isFetching && !isLoading && (
+          <div className="border-t border-slate-100 bg-white px-4 py-2 text-xs font-medium text-slate-500">
+            Updating team list...
+          </div>
+        )}
       </ModulePage>
 
       <TeamForm
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         team={teamToEdit}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(teamToDelete)}
+        title="Delete team"
+        message={`Delete ${teamToDelete?.name || 'this team'}? This will be blocked if the team is already linked with matches or series.`}
+        confirmLabel="Delete"
+        isLoading={deleteState.isLoading}
+        onClose={() => setTeamToDelete(null)}
+        onConfirm={confirmDelete}
       />
     </>
   );

@@ -8,8 +8,8 @@ class TeamController extends ScaffoldController {
 
   getAll = async (req, res, next) => {
     try {
-      const data = await this.service.getAllTeams();
-      res.status(200).json({ success: true, data });
+      const { teams, pagination } = await this.service.getAllTeams(req.validated);
+      res.status(200).json({ success: true, data: teams, meta: pagination });
     } catch (error) {
       next(error);
     }
@@ -17,7 +17,7 @@ class TeamController extends ScaffoldController {
 
   getById = async (req, res, next) => {
     try {
-      const data = await this.service.getTeamById(req.params.id);
+      const data = await this.service.getTeamById(req.validated.id);
       res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);
@@ -26,7 +26,7 @@ class TeamController extends ScaffoldController {
 
   create = async (req, res, next) => {
     try {
-      const data = await this.service.createTeam(req.body, req.file);
+      const data = await this.service.createTeam(req.validated, req.file, req.user);
       res.status(201).json({ success: true, data });
     } catch (error) {
       next(error);
@@ -35,7 +35,8 @@ class TeamController extends ScaffoldController {
 
   update = async (req, res, next) => {
     try {
-      const data = await this.service.updateTeam(req.params.id, req.body, req.file);
+      const { id, ...payload } = req.validated;
+      const data = await this.service.updateTeam(id, payload, req.file, req.user);
       res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);
@@ -44,7 +45,7 @@ class TeamController extends ScaffoldController {
 
   delete = async (req, res, next) => {
     try {
-      await this.service.deleteTeam(req.params.id);
+      await this.service.deleteTeam(req.validated.id, req.user);
       res.status(200).json({ success: true, message: 'Team deleted successfully' });
     } catch (error) {
       next(error);
@@ -53,8 +54,8 @@ class TeamController extends ScaffoldController {
 
   assignPlayer = async (req, res, next) => {
     try {
-      const { playerId } = req.body;
-      const data = await this.service.assignPlayer(req.params.id, playerId);
+      const { id, playerId } = req.validated;
+      const data = await this.service.assignPlayer(id, playerId, req.user);
       res.status(200).json({
         success: true,
         data,
@@ -67,8 +68,8 @@ class TeamController extends ScaffoldController {
 
   removePlayer = async (req, res, next) => {
     try {
-      const { playerId } = req.body;
-      const data = await this.service.removePlayer(req.params.id, playerId);
+      const { id, playerId } = req.validated;
+      const data = await this.service.removePlayer(id, playerId, req.user);
       res.status(200).json({
         success: true,
         data,

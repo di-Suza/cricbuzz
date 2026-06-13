@@ -2,7 +2,7 @@ import { ScaffoldService } from '../../shared/utils/moduleScaffold.js';
 import teamRepository from './team.repository.js';
 import playerRepository from '../player/player.repository.js';
 import { uploadImage } from '../../shared/utils/imagekit.js';
-import { NotFoundError, BadRequestError } from '../../shared/errors/index.js';
+import { BadRequestError, ConflictError, NotFoundError } from '../../shared/errors/index.js';
 
 class TeamService extends ScaffoldService {
   constructor(repository = teamRepository, playerRepo = playerRepository) {
@@ -10,16 +10,55 @@ class TeamService extends ScaffoldService {
     this.playerRepo = playerRepo;
   }
 
-  async createTeam(data, file) {
-    if (file) {
-      const logoUrl = await uploadImage(file.buffer, file.originalname, 'teams');
-      if (logoUrl) data.logo = logoUrl;
-    }
-    return this.repository.create(data);
+  getUserId(user) {
+    return user?.id || user?._id || null;
   }
 
-  async getAllTeams() {
-    return this.repository.findAll();
+  getPlayerId(player) {
+    return player?._id || player;
+  }
+
+  isPlayerInSquad(team, playerId) {
+    return team.squadPlayers.some((player) => String(this.getPlayerId(player)) === String(playerId));
+  }
+
+  async createTeam(data, file, requester = null) {
+    const payload = { ...data };
+
+    if (file) {
+      const logoUrl = await uploadImage(file.buffer, file.originalname, 'teams');
+      if (logoUrl) payload.logo = logoUrl;
+    }
+
+    if (!payload.logo) {
+      throw new BadRequestError('Team logo file or logo URL is required');
+    }
+
+    const userId = this.getUserId(requester);
+    if (userId) {
+      payload.createdBy = userId;
+      payload.updatedBy = userId;
+    }
+
+    return this.repository.create(payload);
+  }
+
+  getPagination(query = {}) {
+    return {
+      page: query.page || 1,
+      limit: query.limit || 10,
+    };
+  }
+
+  getListFilters(query = {}) {
+    return {
+      search: query.search,
+      status: query.status,
+    };
+  }
+
+  async getAllTeams(query = {}) {
+    return this.repository.findAll(this.getListFilters(query), this.getPagination(query));
   }
 
   async getTeamById(id) {
@@ -28,45 +67,84 @@ class TeamService extends ScaffoldService {
     return team;
   }
 
-  async updateTeam(id, data, file) {
+  async updateTeam(id, data, file, requester = null) {
+    const payload = { ...data };
+
     if (file) {
       const logoUrl = await uploadImage(file.buffer, file.originalname, 'teams');
-      if (logoUrl) data.logo = logoUrl;
+      if (logoUrl) payload.logo = logoUrl;
     }
-    const team = await this.repository.update(id, data);
+
+    const userId = this.getUserId(requester);
+    if (userId) {
+      payload.updatedBy = userId;
+    }
+
+    const team = await this.repository.update(id, payload);
     if (!team) throw new NotFoundError('Team not found');
     return team;
   }
 
-  async deleteTeam(id) {
-    const team = await this.repository.delete(id);
+  async deleteTeam(id, requester = null) {
+    const matchDependencies = await this.repository.countMatchDependencies(id);
+
+    if (matchDependencies > 0) {
+      throw new ConflictError('Team cannot be deleted while linked with matches or series');
+    }
+
+    const team = await this.repository.delete(id, this.getUserId(requester));
     if (!team) throw new NotFoundError('Team not found');
     return team;
   }
 
-  async assignPlayer(teamId, playerId) {
+  async assignPlayer(teamId, playerId, requester = null) {
     const player = await this.playerRepo.findById(playerId);
     if (!player) throw new NotFoundError('Player not found');
 
-    const team = await this.repository.addPlayer(teamId, playerId);
+    const existingTeam = await this.repository.findById(teamId);
+    if (!existingTeam) throw new NotFoundError('Team not found');
+
+    if (!this.isPlayerInSquad(existingTeam, playerId) && existingTeam.squadPlayers.length >= 11) {
+      throw new BadRequestError('Team squad cannot have more than 11 players');
+    }
+
+    const team = await this.repository.addPlayer(teamId, playerId, this.getUserId(requester));
     if (!team) throw new NotFoundError('Team not found');
 
-    return this.updateTeamStatus(teamId);
+    return this.updateTeamStatus(teamId, requester);
   }
 
-  async removePlayer(teamId, playerId) {
-    const team = await this.repository.removePlayer(teamId, playerId);
+  async removePlayer(teamId, playerId, requester = null) {
+    const player = await this.playerRepo.findById(playerId);
+    if (!player) throw new NotFoundError('Player not found');
+
+    const existingTeam = await this.repository.findById(teamId);
+    if (!existingTeam) throw new NotFoundError('Team not found');
+
+    if (!this.isPlayerInSquad(existingTeam, playerId)) {
+      throw new BadRequestError('Player is not assigned to this team squad');
+    }
+
+    const livePlayingXiDependencies = await this.repository.countLivePlayingXiDependencies(teamId, playerId);
+    if (livePlayingXiDependencies > 0) {
+      throw new ConflictError('Player cannot be removed while selected in a live match Playing XI');
+    }
+
+    const team = await this.repository.removePlayer(teamId, playerId, this.getUserId(requester));
     if (!team) throw new NotFoundError('Team not found');
 
-    return this.updateTeamStatus(teamId);
+    return this.updateTeamStatus(teamId, requester);
   }
 
-  async updateTeamStatus(teamId) {
+  async updateTeamStatus(teamId, requester = null) {
     const team = await this.repository.findById(teamId);
     if (!team) throw new NotFoundError('Team not found');
 
     const status = team.squadPlayers.length === 11 ? 'PUBLISHED' : 'DRAFT';
-    return this.repository.update(teamId, { status });
+    return this.repository.update(teamId, {
+      status,
+      ...(this.getUserId(requester) ? { updatedBy: this.getUserId(requester) } : {}),
+    });
   }
 
   async getTeamPlayers(teamId) {

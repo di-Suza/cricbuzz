@@ -1,9 +1,22 @@
-import { ScaffoldRoutes } from '../../../shared/utils/moduleScaffold.js';
+import express from 'express';
+
+import validateRequest from '../../../shared/middleware/validateRequest.js';
+import { idParamRules, teamListRules } from '../../team/validators/team.validator.js';
 import teamController from './team.controller.js';
 
-class TeamPublicRoutes extends ScaffoldRoutes {
+class TeamPublicRoutes {
   constructor() {
-    super(teamController);
+    this.router = express.Router();
+    this.register();
+  }
+
+  register() {
+    this.router.get('/', validateRequest(teamListRules), teamController.getAll);
+    this.router.get('/:id', validateRequest(idParamRules), teamController.getById);
+  }
+
+  getRouter() {
+    return this.router;
   }
 }
 

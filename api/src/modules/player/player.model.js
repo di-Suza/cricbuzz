@@ -1,4 +1,9 @@
 import mongoose from 'mongoose';
+import {
+  PLAYER_BATTING_STYLES,
+  PLAYER_BOWLING_STYLES,
+  PLAYER_ROLES,
+} from './player.constants.js';
 
 const playerSchema = new mongoose.Schema(
   {
@@ -13,7 +18,7 @@ const playerSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['BATSMAN', 'BOWLER', 'ALL_ROUNDER', 'WICKET_KEEPER'],
+      enum: PLAYER_ROLES,
       required: true,
     },
     country: {
@@ -23,9 +28,13 @@ const playerSchema = new mongoose.Schema(
     },
     battingStyle: {
       type: String,
+      enum: PLAYER_BATTING_STYLES,
+      required: true,
     },
     bowlingStyle: {
       type: String,
+      enum: [...PLAYER_BOWLING_STYLES, null],
+      default: null,
     },
     isDeleted: {
       type: Boolean,
