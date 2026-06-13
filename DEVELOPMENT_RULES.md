@@ -79,7 +79,7 @@ Edge cases:
 
 Business rules:
 - `name` aur `season` unique hone chahiye.
-- Status flow: `UPCOMING -> LIVE -> COMPLETED`.
+- Status flow: `UPCOMING -> LIVE -> COMPLETED [OR CANCELED]`.
 - Series delete se pehle check karo ki koi match exist to nahi karta.
 
 Edge cases:
