@@ -8,6 +8,14 @@ class ErrorHandler {
       };
     }
 
+    if (error.name === 'ValidationError') {
+      return {
+        statusCode: 400,
+        message: Object.values(error.errors).map(err => err.message).join(', ') || 'Validation Error',
+        details: error.errors,
+      };
+    }
+
     if (error.code === 11000) {
       return {
         statusCode: 409,

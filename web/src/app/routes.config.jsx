@@ -7,6 +7,7 @@ import ScoringPage from '../features/scoring/pages/ScoringPage.jsx';
 import SeriesPage from '../features/series/pages/SeriesPage.jsx';
 import SquadsPage from '../features/squads/pages/SquadsPage.jsx';
 import TeamsPage from '../features/teams/pages/TeamsPage.jsx';
+import TeamDetailsPage from '../features/teams/pages/TeamDetailsPage.jsx';
 import UsersPage from '../features/users/pages/UsersPage.jsx';
 import { ADMIN, SCORER, SUPER_ADMIN } from '../shared/constants/roles.js';
 
@@ -50,6 +51,15 @@ const protectedRoutes = [
     roles: CONTENT_ROLES,
     element: <TeamsPage />,
     nav: true,
+  },
+  {
+    id: 'team-details',
+    path: 'teams/:id',
+    label: 'Team Details',
+    module: 'Team Squad',
+    roles: CONTENT_ROLES,
+    element: <TeamDetailsPage />,
+    nav: false,
   },
   {
     id: 'squads',
