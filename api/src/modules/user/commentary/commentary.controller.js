@@ -1,9 +1,15 @@
-import { ScaffoldController } from '../../../shared/utils/moduleScaffold.js';
+import asyncHandler from '../../../shared/utils/asyncHandler.js';
 import commentaryService from './commentary.service.js';
 
-class CommentaryPublicController extends ScaffoldController {
+class CommentaryPublicController {
   constructor(service = commentaryService) {
-    super(service);
+    this.service = service;
+    this.getAll = asyncHandler(this.getAll.bind(this));
+  }
+
+  async getAll(req, res) {
+    const { commentary, pagination } = await this.service.getCommentary(req.params.matchId, req.query);
+    res.json({ success: true, data: commentary, meta: pagination });
   }
 }
 

@@ -1,9 +1,18 @@
-import { ScaffoldRoutes } from '../../../shared/utils/moduleScaffold.js';
+import express from 'express';
 import homeController from './home.controller.js';
 
-class HomePublicRoutes extends ScaffoldRoutes {
+class HomePublicRoutes {
   constructor() {
-    super(homeController);
+    this.router = express.Router();
+    this.register();
+  }
+
+  register() {
+    this.router.get('/', homeController.getHomeFeed);
+  }
+
+  getRouter() {
+    return this.router;
   }
 }
 

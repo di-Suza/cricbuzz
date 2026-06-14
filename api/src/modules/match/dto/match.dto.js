@@ -1,6 +1,6 @@
 const matchDto = Object.freeze({
   module: 'match',
-  publicFields: ['_id', 'seriesId', 'team1', 'team2', 'venue', 'startTime', 'status'],
+  publicFields: ['_id', 'series', 'team1', 'team2', 'scheduledAt', 'venue', 'matchType', 'status'],
 });
 
 export default matchDto;

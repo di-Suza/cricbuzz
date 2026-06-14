@@ -1,5 +1,6 @@
 import ImageKit from '@imagekit/nodejs';
 import env from '../../config/env.js';
+import logger from '../../config/logger.js';
 
 let imagekitInstance = null;
 
@@ -10,7 +11,7 @@ if (env.IMAGEKIT_PUBLIC_KEY && env.IMAGEKIT_PRIVATE_KEY && env.IMAGEKIT_URL_ENDP
     urlEndpoint: env.IMAGEKIT_URL_ENDPOINT,
   });
 } else {
-  console.warn('⚠️ ImageKit configuration is missing in .env. Image uploads will not work.');
+  logger.warn('ImageKit configuration is missing in .env. Image uploads will not work.');
 }
 
 import { BadRequestError } from '../errors/index.js';
@@ -25,7 +26,7 @@ import { BadRequestError } from '../errors/index.js';
  */
 export const uploadImage = async (fileBuffer, originalName, folder = 'general') => {
   if (!imagekitInstance) {
-    console.error('ImageKit is not configured. Cannot upload image.');
+    logger.error('ImageKit is not configured. Cannot upload image.');
     throw new BadRequestError('ImageKit is not configured. Please add IMAGEKIT keys to .env');
   }
 
@@ -37,7 +38,7 @@ export const uploadImage = async (fileBuffer, originalName, folder = 'general') 
     });
     return response.url;
   } catch (error) {
-    console.error('Failed to upload image to ImageKit:', error);
+    logger.error({ error }, 'Failed to upload image to ImageKit');
     throw new BadRequestError(`Image upload failed: ${error.message || 'Check ImageKit credentials'}`);
   }
 };

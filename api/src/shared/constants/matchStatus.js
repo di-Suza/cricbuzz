@@ -9,8 +9,20 @@ const MatchStatus = Object.freeze({
 });
 
 const MATCH_STATUS_LIST = Object.freeze(Object.values(MatchStatus));
+const MATCH_STATUS_FLOW = Object.freeze([
+  MatchStatus.DRAFT,
+  MatchStatus.UPCOMING,
+  MatchStatus.TOSS_COMPLETED,
+  MatchStatus.PLAYING_XI_SELECTED,
+  MatchStatus.LIVE,
+  MatchStatus.INNINGS_BREAK,
+  MatchStatus.COMPLETED,
+]);
+const PLAYING_XI_READY_STATUS = MatchStatus.TOSS_COMPLETED;
 
 export {
+  MATCH_STATUS_FLOW,
   MatchStatus,
   MATCH_STATUS_LIST,
+  PLAYING_XI_READY_STATUS,
 };

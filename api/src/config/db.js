@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 import env from './env.js';
+import logger from './logger.js';
 
 class Database {
   constructor() {
@@ -17,7 +18,7 @@ class Database {
     }
 
     this.connection = await mongoose.connect(this.getUri());
-    console.log(`MongoDB connected: ${mongoose.connection.host}`);
+    logger.info({ host: mongoose.connection.host }, 'MongoDB connected');
     return this.connection;
   }
 

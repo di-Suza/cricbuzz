@@ -1,9 +1,18 @@
-import { ScaffoldRoutes } from '../../../shared/utils/moduleScaffold.js';
+import express from 'express';
 import commentaryController from './commentary.controller.js';
 
-class CommentaryPublicRoutes extends ScaffoldRoutes {
+class CommentaryPublicRoutes {
   constructor() {
-    super(commentaryController, { mergeParams: true });
+    this.router = express.Router({ mergeParams: true });
+    this.register();
+  }
+
+  register() {
+    this.router.get('/', commentaryController.getAll);
+  }
+
+  getRouter() {
+    return this.router;
   }
 }
 

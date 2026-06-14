@@ -1,9 +1,21 @@
-import { ScaffoldRoutes } from '../../../shared/utils/moduleScaffold.js';
+import express from 'express';
 import matchController from './match.controller.js';
 
-class MatchPublicRoutes extends ScaffoldRoutes {
+class MatchPublicRoutes {
   constructor() {
-    super(matchController);
+    this.router = express.Router();
+    this.register();
+  }
+
+  register() {
+    this.router.get('/', matchController.getAll);
+    this.router.get('/:matchId/center', matchController.getCenter);
+    this.router.get('/:matchId/scorecard', matchController.getScorecard);
+    this.router.get('/:matchId', matchController.getById);
+  }
+
+  getRouter() {
+    return this.router;
   }
 }
 

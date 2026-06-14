@@ -1,3 +1,5 @@
+import logger from '../../config/logger.js';
+
 class ErrorHandler {
   static normalize(error) {
     if (error.name === 'CastError') {
@@ -35,7 +37,7 @@ class ErrorHandler {
     const normalized = ErrorHandler.normalize(error);
 
     if (normalized.statusCode >= 500) {
-      console.error(error);
+      logger.error({ error }, 'Unhandled application error');
     }
 
     res.status(normalized.statusCode).json({

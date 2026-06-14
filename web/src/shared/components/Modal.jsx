@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-function Modal({ isOpen, onClose, title, children }) {
+function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-lg' }) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -19,7 +19,7 @@ function Modal({ isOpen, onClose, title, children }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
       <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onClick={onClose} />
       
-      <div className="relative w-full max-w-lg transform rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+      <div className={`relative w-full ${maxWidth} max-h-[92vh] transform overflow-y-auto rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all`}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-xl font-bold leading-6 text-slate-900">{title}</h3>
           <button

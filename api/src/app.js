@@ -41,6 +41,18 @@ function getAllowedCorsOrigins() {
   return Array.from(origins);
 }
 
+function publicOnlyRouter(...middlewares) {
+  const router = express.Router({ mergeParams: true });
+
+  router.use((req, _res, next) => {
+    if (req.headers.authorization) return next('router');
+    return next();
+  });
+
+  router.use(...middlewares);
+  return router;
+}
+
 class App {
   constructor() {
     this.app = express();
@@ -92,6 +104,15 @@ class App {
     this.app.use('/api/public/series', responseCache(60), publicSeriesRoutes);
     this.app.use('/api/public/teams', responseCache(60), publicTeamRoutes);
     this.app.use('/api/public/players', responseCache(60), publicPlayerRoutes);
+
+    this.app.use('/api/home', responseCache(10), publicHomeRoutes);
+    this.app.use('/api/matches/:matchId/commentary', publicOnlyRouter(responseCache(5), publicCommentaryRoutes));
+    this.app.use('/api/matches', publicOnlyRouter(responseCache(10), publicMatchRoutes));
+    this.app.use('/api/series/:seriesId/points-table', publicOnlyRouter(responseCache(30), publicPointsTableRoutes));
+    this.app.use('/api/search', responseCache(30), publicSearchRoutes);
+    this.app.use('/api/series', publicOnlyRouter(responseCache(60), publicSeriesRoutes));
+    this.app.use('/api/teams', publicOnlyRouter(responseCache(60), publicTeamRoutes));
+    this.app.use('/api/players', publicOnlyRouter(responseCache(60), publicPlayerRoutes));
   }
 
   registerAdminRoutes() {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../shared/components/Modal.jsx';
+import { useToast } from '../../../shared/components/ToastProvider.jsx';
 import { useCreatePlayerMutation, useUpdatePlayerMutation } from '../api/playersApi.js';
 import {
   PLAYER_BATTING_STYLE_OPTIONS,
@@ -12,6 +13,7 @@ function getKnownOptionValue(value, options) {
 }
 
 function PlayerForm({ isOpen, onClose, player }) {
+  const toast = useToast();
   const [createPlayer, { isLoading: isCreating }] = useCreatePlayerMutation();
   const [updatePlayer, { isLoading: isUpdating }] = useUpdatePlayerMutation();
 
@@ -58,8 +60,7 @@ function PlayerForm({ isOpen, onClose, player }) {
       }
       onClose();
     } catch (err) {
-      console.error('Failed to save player: ', err);
-      alert(err.data?.message || 'Error saving player');
+      toast.error(err.data?.message || 'Error saving player');
     }
   };
 

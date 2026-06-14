@@ -1,9 +1,18 @@
-import { ScaffoldRoutes } from '../../../shared/utils/moduleScaffold.js';
+import express from 'express';
 import pointsTableController from './pointsTable.controller.js';
 
-class PointsTablePublicRoutes extends ScaffoldRoutes {
+class PointsTablePublicRoutes {
   constructor() {
-    super(pointsTableController, { mergeParams: true });
+    this.router = express.Router({ mergeParams: true });
+    this.register();
+  }
+
+  register() {
+    this.router.get('/', pointsTableController.getBySeries);
+  }
+
+  getRouter() {
+    return this.router;
   }
 }
 
