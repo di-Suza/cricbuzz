@@ -450,9 +450,24 @@ function ScoringPage() {
             <div className="flex items-center justify-between rounded-xl border border-[#26282b] bg-[#1e2023] p-5">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#87909e] mb-1.5">ACTIVE STATE</p>
-                <span className="rounded bg-[#2a2c30] px-3 py-1.5 text-sm font-bold text-white">
-                  {selectedInnings === 1 ? '1st' : selectedInnings === 2 ? '2nd' : `${selectedInnings}th`} Innings: {getTeamName(lockedBattingTeam)} Batting
-                </span>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedInnings}
+                    onChange={(e) => setForm(f => ({ ...f, innings: Number(e.target.value) }))}
+                    className="rounded bg-[#2a2c30] border border-[#3c3e42] px-3 py-1.5 text-sm font-bold text-white cursor-pointer hover:bg-[#3c3e42] transition"
+                  >
+                    {Array.from({ length: scoringRules.maxInnings || 2 }, (_, i) => i + 1).map(num => (
+                      <option key={num} value={num}>
+                        {num === 1 ? '1st' : num === 2 ? '2nd' : `${num}th`} Innings
+                      </option>
+                    ))}
+                  </select>
+                  {lockedBattingTeam && (
+                    <span className="text-sm font-bold text-[#a0a5ad] ml-1">
+                      {getTeamName(lockedBattingTeam)} Batting
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-6">
                 <div>

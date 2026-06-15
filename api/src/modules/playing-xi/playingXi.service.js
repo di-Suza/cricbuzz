@@ -1,7 +1,7 @@
 import { MatchStatus } from '../../shared/constants/matchStatus.js';
 import { BadRequestError, ConflictError, NotFoundError } from '../../shared/errors/index.js';
 import { emitPublic, emitToMatch } from '../../sockets/socketGateway.js';
-import responseCache from '../user/cache/responseCache.js';
+import { responseCache } from '../user/cache/responseCache.js';
 import { ScaffoldService } from '../../shared/utils/moduleScaffold.js';
 import playingXiRepository from './playingXi.repository.js';
 
