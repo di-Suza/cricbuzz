@@ -15,9 +15,6 @@ function PublicLayout() {
             Cricket <span className="text-[#b8c9ff]">Arena</span>
           </Link>
 
-          <div className="hidden h-11 min-w-72 items-center rounded-full bg-[#252b2d] px-4 text-sm text-[#8f98a3] md:flex">
-            Search matches, players...
-          </div>
 
           <nav className="flex items-center gap-3">
             {accessToken ? (
