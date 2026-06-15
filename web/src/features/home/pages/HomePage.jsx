@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { Link } from 'react-router';
 import { getSocket } from '../../../shared/socket/socketClient.js';
-import { useGetHomeStatusQuery } from '../api/homeApi.js';
+import { homeApi, useGetHomeStatusQuery } from '../api/homeApi.js';
 
 function getTeamName(team) {
   return team?.shortName || team?.name || 'Team';
@@ -13,6 +14,23 @@ function getTeamScore(match, teamId) {
     return `${score.runs}/${score.wickets}`;
   }
   return '-';
+}
+
+function getEntityId(value) {
+  return String(value?._id || value?.id || value || '');
+}
+
+function upsertByIdOrInnings(items = [], item) {
+  if (!item) return items;
+  const itemId = getEntityId(item);
+  const index = items.findIndex((entry) => (
+    (itemId && getEntityId(entry) === itemId)
+    || Number(entry?.innings) === Number(item.innings)
+  ));
+
+  if (index === -1) return [...items, item].sort((a, b) => Number(a.innings) - Number(b.innings));
+
+  return items.map((entry, entryIndex) => (entryIndex === index ? { ...entry, ...item } : entry));
 }
 
 function MatchCard({ match, tone = 'live' }) {
@@ -127,6 +145,7 @@ function StoryCard() {
 }
 
 function HomePage() {
+  const dispatch = useDispatch();
   const { data, isLoading, refetch } = useGetHomeStatusQuery();
   const liveMatches = data?.liveMatches || [];
   const upcomingMatches = data?.upcomingMatches || [];
@@ -136,7 +155,25 @@ function HomePage() {
     const socket = getSocket();
     socket.connect();
 
-    const refreshHome = () => {
+    const refreshHome = (payload = {}) => {
+      if (payload.reason === 'score.updated' && payload.score && payload.matchId) {
+        dispatch(homeApi.util.updateQueryData('getHomeStatus', undefined, (draft) => {
+          const updateMatch = (match) => {
+            if (String(match._id) !== String(payload.matchId)) return match;
+            const scores = upsertByIdOrInnings(match.scores || [], payload.score);
+            return {
+              ...match,
+              scores,
+              liveScore: payload.score,
+            };
+          };
+
+          draft.liveMatches = (draft.liveMatches || []).map(updateMatch);
+          draft.upcomingMatches = (draft.upcomingMatches || []).map(updateMatch);
+          draft.recentMatches = (draft.recentMatches || []).map(updateMatch);
+        }));
+      }
+
       refetch();
     };
 
@@ -145,7 +182,7 @@ function HomePage() {
     return () => {
       socket.off('public.feed.updated', refreshHome);
     };
-  }, [refetch]);
+  }, [dispatch, refetch]);
 
   return (
     <section className="min-h-screen bg-[#141517] text-white">

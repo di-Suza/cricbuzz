@@ -3,6 +3,7 @@ import { BadRequestError, ConflictError, NotFoundError } from '../../shared/erro
 import { emitPublic, emitToMatch } from '../../sockets/socketGateway.js';
 import { responseCache } from '../user/cache/responseCache.js';
 import { ScaffoldService } from '../../shared/utils/moduleScaffold.js';
+import logger from '../../config/logger.js';
 import scoreRepository from './score.repository.js';
 
 const MATCH_SCORING_RULES = Object.freeze({
@@ -26,6 +27,34 @@ class ScoreService extends ScaffoldService {
 
   getPlayerId(player) {
     return String(player?._id || player?.id || player?.player || player || '');
+  }
+
+  toPlain(value) {
+    if (!value) return value;
+    if (typeof value.toObject === 'function') {
+      return value.toObject({ versionKey: false });
+    }
+    return value;
+  }
+
+  async notifyScoreUpdate(matchId, payload) {
+    try {
+      await responseCache.clear();
+    } catch (error) {
+      logger.warn(`Public cache could not be cleared: ${error.message}`);
+    }
+
+    try {
+      emitToMatch(matchId, 'score.updated', payload);
+      emitPublic('public.feed.updated', {
+        matchId: String(matchId),
+        reason: 'score.updated',
+        score: payload.score,
+        event: payload.event,
+      });
+    } catch (error) {
+      logger.warn(`Score socket update could not be delivered: ${error.message}`);
+    }
   }
 
   formatOvers(balls) {
@@ -550,13 +579,11 @@ class ScoreService extends ScaffoldService {
 
     const payload = {
       matchId: String(match._id),
-      score: updatedScore,
-      event,
+      score: this.toPlain(updatedScore),
+      event: this.toPlain(event),
     };
 
-    await responseCache.clear();
-    emitToMatch(match._id, 'score.updated', payload);
-    emitPublic('public.feed.updated', { matchId: String(match._id), reason: 'score.updated' });
+    await this.notifyScoreUpdate(match._id, payload);
     return payload;
   }
 }

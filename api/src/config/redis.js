@@ -26,8 +26,8 @@ class RedisConnection {
       }
     });
 
-    client.on('error', (error) => {
-      logger.warn({ error }, 'Redis client error');
+    client.on('error', () => {
+      logger.warn('Redis connection issue, cache fallback will be used');
     });
 
     return client;
@@ -50,8 +50,8 @@ class RedisConnection {
           logger.info('Redis connected');
           return this.client;
         })
-        .catch((error) => {
-          logger.warn({ error }, 'Redis unavailable, using in-memory cache fallback');
+        .catch(() => {
+          logger.warn('Redis unavailable, using in-memory cache fallback');
           this.disabledUntil = Date.now() + 30_000;
           return null;
         })

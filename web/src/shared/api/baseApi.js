@@ -9,6 +9,7 @@ const refreshMutex = new Mutex();
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
   credentials: 'include',
+  fetchFn: (input, init) => fetch(input, { ...init, cache: 'no-store' }),
   prepareHeaders: (headers, { getState }) => {
     const token = getState().auth.accessToken;
 
