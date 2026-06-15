@@ -74,7 +74,7 @@ const protectedRoutes = [
     path: 'matches',
     label: 'Matches',
     module: 'Match Lifecycle',
-    roles: LIVE_ROLES,
+    roles: ALL_ROLES,
     element: <MatchesPage />,
     nav: true,
   },

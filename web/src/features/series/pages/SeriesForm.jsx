@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Modal from '../../../shared/components/Modal.jsx';
+import { useToast } from '../../../shared/components/ToastProvider.jsx';
 import {
   useCreateSeriesMutation,
   useGetEligibleSeriesTeamsQuery,
@@ -12,12 +13,19 @@ const FORMATS = [
   { value: 'C', label: 'C - Custom league' },
 ];
 
+const MATCH_TYPES = [
+  { value: 'T20', label: 'T20' },
+  { value: 'ODI', label: 'ODI' },
+  { value: 'TEST', label: 'Test' },
+];
+
 function toDateInput(value) {
   if (!value) return '';
   return new Date(value).toISOString().slice(0, 10);
 }
 
 function SeriesForm({ isOpen, onClose, series }) {
+  const toast = useToast();
   const { data: eligibleTeams = [] } = useGetEligibleSeriesTeamsQuery(undefined, { skip: !isOpen });
   const [createSeries, createState] = useCreateSeriesMutation();
   const [updateSeries, updateState] = useUpdateSeriesMutation();
@@ -27,6 +35,7 @@ function SeriesForm({ isOpen, onClose, series }) {
     startDate: '',
     endDate: '',
     format: 'C',
+    matchType: 'T20',
     numberOfMatches: 1,
     teams: [],
   });
@@ -39,6 +48,7 @@ function SeriesForm({ isOpen, onClose, series }) {
         startDate: toDateInput(series.startDate),
         endDate: toDateInput(series.endDate),
         format: series.format || 'C',
+        matchType: series.matchType || 'T20',
         numberOfMatches: series.numberOfMatches || 1,
         teams: (series.teams || []).map((entry) => ({
           team: entry.team?._id || entry.team || entry._id,
@@ -52,6 +62,7 @@ function SeriesForm({ isOpen, onClose, series }) {
         startDate: '',
         endDate: '',
         format: 'C',
+        matchType: 'T20',
         numberOfMatches: 1,
         teams: [],
       });
@@ -102,14 +113,14 @@ function SeriesForm({ isOpen, onClose, series }) {
       }
       onClose();
     } catch (error) {
-      alert(error?.data?.message || 'Unable to save series');
+      toast.error(error?.data?.message || 'Unable to save series');
     }
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={series ? 'Edit Series' : 'Create Series'}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
           <label className="block">
             <span className="text-sm font-medium text-slate-700">Name</span>
             <input
@@ -118,6 +129,18 @@ function SeriesForm({ isOpen, onClose, series }) {
               onChange={(event) => setField('name', event.target.value)}
               className="mt-1 h-10 w-full rounded-md border border-slate-300 px-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
             />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium text-slate-700">Match Type</span>
+            <select
+              value={form.matchType}
+              onChange={(event) => setField('matchType', event.target.value)}
+              className="mt-1 h-10 w-full rounded-md border border-slate-300 px-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+            >
+              {MATCH_TYPES.map((matchType) => (
+                <option key={matchType.value} value={matchType.value}>{matchType.label}</option>
+              ))}
+            </select>
           </label>
           <label className="block">
             <span className="text-sm font-medium text-slate-700">Season</span>
@@ -199,7 +222,7 @@ function SeriesForm({ isOpen, onClose, series }) {
                   />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold text-slate-900">{team.name}</div>
-                    <div className="text-xs text-slate-500">{team.shortName} · {team.squadPlayers?.length || 0} players</div>
+                    <div className="text-xs text-slate-500">{team.shortName} - {team.squadPlayers?.length || 0} players</div>
                   </div>
                   {form.format === 'A' && selectedTeamIds.has(team._id) && (
                     <select

@@ -4,6 +4,8 @@ import { MatchStatus } from '../../shared/constants/matchStatus.js';
 const SERIES_STATUSES = Object.freeze(['UPCOMING', 'LIVE', 'COMPLETED']);
 const SERIES_FORMATS = Object.freeze(['A', 'B', 'C']);
 const SERIES_GROUPS = Object.freeze(['A', 'B']);
+const SERIES_MATCH_TYPES = Object.freeze(['T20', 'ODI', 'TEST']);
+const TOSS_DECISIONS = Object.freeze(['BAT', 'BOWL']);
 
 const seriesTeamSchema = new mongoose.Schema(
   {
@@ -51,6 +53,12 @@ const seriesSchema = new mongoose.Schema(
       enum: SERIES_FORMATS,
       required: true,
     },
+    matchType: {
+      type: String,
+      enum: SERIES_MATCH_TYPES,
+      required: true,
+      default: 'T20',
+    },
     numberOfMatches: {
       type: Number,
       required: true,
@@ -74,6 +82,25 @@ const seriesSchema = new mongoose.Schema(
 );
 
 seriesSchema.index({ name: 1, season: 1 }, { unique: true });
+
+const playingXiPlayerSchema = new mongoose.Schema(
+  {
+    player: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Player',
+      required: true,
+    },
+    isCaptain: {
+      type: Boolean,
+      default: false,
+    },
+    isWicketKeeper: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { _id: false }
+);
 
 const seriesMatchSchema = new mongoose.Schema(
   {
@@ -101,10 +128,53 @@ const seriesMatchSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    matchType: {
+      type: String,
+      enum: SERIES_MATCH_TYPES,
+      required: true,
+      default: 'T20',
+    },
     status: {
       type: String,
       enum: Object.values(MatchStatus),
       default: MatchStatus.UPCOMING,
+    },
+    tossWinner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+      default: null,
+    },
+    tossDecision: {
+      type: String,
+      enum: [...TOSS_DECISIONS, null],
+      default: null,
+    },
+    playingXI: {
+      team1: {
+        type: [playingXiPlayerSchema],
+        default: undefined,
+      },
+      team2: {
+        type: [playingXiPlayerSchema],
+        default: undefined,
+      },
+      selectedAt: {
+        type: Date,
+      },
+      selectedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    },
+    winner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+      default: null,
+    },
+    result: {
+      type: String,
+      trim: true,
+      default: '',
     },
     isDeleted: {
       type: Boolean,
@@ -130,7 +200,9 @@ const SeriesMatch = mongoose.models.SeriesMatch || mongoose.model('SeriesMatch',
 export {
   SERIES_FORMATS,
   SERIES_GROUPS,
+  SERIES_MATCH_TYPES,
   SERIES_STATUSES,
   SeriesMatch,
+  TOSS_DECISIONS,
 };
 export default Series;

@@ -1,6 +1,7 @@
 import { NotFoundError } from '../../../shared/errors/index.js';
 import seriesRepository from '../../series/series.repository.js';
 import PublicQueryHelper from '../shared/query.js';
+import pointsTableService from '../points-table/pointsTable.service.js';
 
 class SeriesPublicService {
   constructor(repository = seriesRepository) {
@@ -46,6 +47,7 @@ class SeriesPublicService {
       endDate: data.endDate,
       status: data.status,
       format: data.format,
+      matchType: data.matchType,
       numberOfMatches: data.numberOfMatches,
       teams: Array.isArray(data.teams) ? data.teams.filter((entry) => entry.team).map((entry) => this.serializeTeam(entry)) : [],
     };
@@ -65,11 +67,19 @@ class SeriesPublicService {
 
   async getSeriesById(id) {
     const safeId = PublicQueryHelper.ensureId(id, 'Series');
-    const series = await this.repository.findById(safeId);
+    const [series, matches, pointsTable] = await Promise.all([
+      this.repository.findById(safeId),
+      this.repository.findSeriesMatches(safeId),
+      pointsTableService.getPointsTable(safeId),
+    ]);
 
     if (!series) throw new NotFoundError('Series not found');
 
-    return this.serializeSeries(series);
+    return {
+      series: this.serializeSeries(series),
+      matches,
+      pointsTable,
+    };
   }
 }
 

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../shared/components/Modal.jsx';
+import { useToast } from '../../../shared/components/ToastProvider.jsx';
 import { useCreateTeamMutation, useUpdateTeamMutation } from '../api/teamsApi.js';
 
 function TeamForm({ isOpen, onClose, team }) {
+  const toast = useToast();
   const [createTeam, { isLoading: isCreating }] = useCreateTeamMutation();
   const [updateTeam, { isLoading: isUpdating }] = useUpdateTeamMutation();
 
@@ -38,15 +40,14 @@ function TeamForm({ isOpen, onClose, team }) {
         await updateTeam({ id: team._id, formData }).unwrap();
       } else {
         if (!logoFile) {
-          alert('Logo is required for new teams');
+          toast.error('Logo is required for new teams');
           return;
         }
         await createTeam(formData).unwrap();
       }
       onClose();
     } catch (err) {
-      console.error('Failed to save team: ', err);
-      alert(err.data?.message || 'Error saving team');
+      toast.error(err.data?.message || 'Error saving team');
     }
   };
 

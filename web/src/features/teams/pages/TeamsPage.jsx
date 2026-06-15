@@ -2,10 +2,12 @@ import { useState } from 'react';
 import ConfirmModal from '../../../shared/components/ConfirmModal.jsx';
 import ModulePage from '../../../shared/components/ModulePage.jsx';
 import PaginationBar from '../../../shared/components/PaginationBar.jsx';
+import { useToast } from '../../../shared/components/ToastProvider.jsx';
 import { useGetTeamsQuery, useDeleteTeamMutation } from '../api/teamsApi.js';
 import TeamForm from './TeamForm.jsx';
 
 function TeamsPage() {
+  const toast = useToast();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState('');
@@ -46,7 +48,7 @@ function TeamsPage() {
       await deleteTeam(teamToDelete._id).unwrap();
       setTeamToDelete(null);
     } catch (error) {
-      alert(error?.data?.message || 'Unable to delete team');
+      toast.error(error?.data?.message || 'Unable to delete team');
     }
   };
 

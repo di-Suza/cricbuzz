@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 
 import { Roles } from '../../shared/constants/roles.js';
-import { ConflictError, NotFoundError, UnauthorizedError } from '../../shared/errors/index.js';
+import { ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from '../../shared/errors/index.js';
 import jwtTokenService from '../../shared/utils/jwtToken.js';
 import userRepository from '../users/user.repository.js';
 import authSessionService from './session/authSession.service.js';

@@ -5,6 +5,7 @@ import { PLAYER_ROLE_OPTIONS, formatPlayerOptionValue } from '../../players/cons
 import { useGetTeamByIdQuery, useGetTeamsQuery } from '../../teams/api/teamsApi.js';
 import ModulePage from '../../../shared/components/ModulePage.jsx';
 import PaginationBar from '../../../shared/components/PaginationBar.jsx';
+import { useToast } from '../../../shared/components/ToastProvider.jsx';
 import {
   useAddPlayerToSquadMutation,
   useRemovePlayerFromSquadMutation,
@@ -23,6 +24,7 @@ function formatRole(role = '') {
 }
 
 function SquadsPage() {
+  const toast = useToast();
   const [teamPage, setTeamPage] = useState(1);
   const [teamLimit, setTeamLimit] = useState(10);
   const [teamSearch, setTeamSearch] = useState('');
@@ -107,7 +109,7 @@ function SquadsPage() {
     try {
       await addPlayerToSquad({ teamId: selectedTeamId, playerId }).unwrap();
     } catch (error) {
-      alert(error?.data?.message || 'Unable to add player to squad');
+      toast.error(error?.data?.message || 'Unable to add player to squad');
     } finally {
       setActivePlayerId(null);
     }
@@ -121,7 +123,7 @@ function SquadsPage() {
     try {
       await removePlayerFromSquad({ teamId: selectedTeamId, playerId }).unwrap();
     } catch (error) {
-      alert(error?.data?.message || 'Unable to remove player from squad');
+      toast.error(error?.data?.message || 'Unable to remove player from squad');
     } finally {
       setActivePlayerId(null);
     }

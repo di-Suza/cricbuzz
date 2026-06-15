@@ -20,9 +20,9 @@ function compactParams(params) {
 const seriesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getSeries: builder.query({
-      query: ({ page = 1, limit = 10, search = '', status = '', format = '' } = {}) => ({
+      query: ({ page = 1, limit = 10, search = '', status = '', format = '', matchType = '' } = {}) => ({
         url: '/series',
-        params: compactParams({ page, limit, search, status, format }),
+        params: compactParams({ page, limit, search, status, format, matchType }),
       }),
       transformResponse: unwrapList,
       providesTags: (result) => [
@@ -70,40 +70,14 @@ const seriesApi = baseApi.injectEndpoints({
       transformResponse: unwrapData,
       invalidatesTags: ['Series'],
     }),
-    getSeriesMatches: builder.query({
-      query: (id) => `/series/${id}/matches`,
-      transformResponse: unwrapData,
-      providesTags: (_result, _error, id) => [{ type: 'Matches', id: `series-${id}` }],
-    }),
-    createSeriesMatch: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/series/${id}/matches`,
-        method: 'POST',
-        body,
-      }),
-      transformResponse: unwrapData,
-      invalidatesTags: (_result, _error, { id }) => ['Series', { type: 'Matches', id: `series-${id}` }],
-    }),
-    updateSeriesMatch: builder.mutation({
-      query: ({ id, matchId, body }) => ({
-        url: `/series/${id}/matches/${matchId}`,
-        method: 'PATCH',
-        body,
-      }),
-      transformResponse: unwrapData,
-      invalidatesTags: (_result, _error, { id }) => [{ type: 'Matches', id: `series-${id}` }],
-    }),
   }),
 });
 
 export const {
-  useCreateSeriesMatchMutation,
   useCreateSeriesMutation,
   useDeleteSeriesMutation,
   useGetEligibleSeriesTeamsQuery,
-  useGetSeriesMatchesQuery,
   useGetSeriesQuery,
-  useUpdateSeriesMatchMutation,
   useUpdateSeriesMutation,
   useUpdateSeriesStatusMutation,
 } = seriesApi;

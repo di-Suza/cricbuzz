@@ -9,8 +9,6 @@ import {
   idParamRules,
   removeSeriesTeamRules,
   seriesListRules,
-  seriesMatchRules,
-  updateSeriesMatchRules,
   updateSeriesRules,
   updateSeriesStatusRules,
 } from './validators/series.validator.js';
@@ -37,8 +35,6 @@ class SeriesRoutes extends ScaffoldRoutes {
     this.router.post('/:id/teams', validateRequest(addSeriesTeamsRules), this.controller.addTeams);
     this.router.delete('/:id/teams/:teamId', validateRequest(removeSeriesTeamRules), this.controller.removeTeam);
     this.router.get('/:id/matches', validateRequest(idParamRules), this.controller.getMatches);
-    this.router.post('/:id/matches', validateRequest(seriesMatchRules), this.controller.createMatch);
-    this.router.patch('/:id/matches/:matchId', validateRequest(updateSeriesMatchRules), this.controller.updateMatch);
   }
 }
 

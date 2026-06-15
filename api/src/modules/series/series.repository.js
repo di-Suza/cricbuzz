@@ -47,6 +47,7 @@ class SeriesRepository extends ScaffoldRepository {
 
     if (filters.status) query.status = filters.status;
     if (filters.format) query.format = filters.format;
+    if (filters.matchType) query.matchType = filters.matchType;
 
     return query;
   }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import ConfirmModal from '../../../shared/components/ConfirmModal.jsx';
 import ModulePage from '../../../shared/components/ModulePage.jsx';
 import PaginationBar from '../../../shared/components/PaginationBar.jsx';
+import { useToast } from '../../../shared/components/ToastProvider.jsx';
 import { useGetPlayersQuery, useDeletePlayerMutation } from '../api/playersApi.js';
 import { PLAYER_ROLE_OPTIONS, formatPlayerOptionValue } from '../constants/playerOptions.js';
 import PlayerForm from './PlayerForm.jsx';
@@ -16,6 +17,7 @@ function formatRole(role = '') {
 }
 
 function PlayersPage() {
+  const toast = useToast();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState('');
@@ -55,7 +57,7 @@ function PlayersPage() {
       await deletePlayer(playerToDelete._id).unwrap();
       setPlayerToDelete(null);
     } catch (error) {
-      alert(error?.data?.message || 'Unable to delete player');
+      toast.error(error?.data?.message || 'Unable to delete player');
     }
   };
 

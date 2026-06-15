@@ -24,6 +24,7 @@ class SeriesService extends ScaffoldService {
       search: query.search,
       status: query.status,
       format: query.format,
+      matchType: query.matchType,
     };
   }
 
@@ -245,6 +246,7 @@ class SeriesService extends ScaffoldService {
       team2: data.team2,
       scheduledAt: data.scheduledAt,
       venue: data.venue || '',
+      matchType: series.matchType || 'T20',
       status: MatchStatus.UPCOMING,
       ...(userId ? { createdBy: userId, updatedBy: userId } : {}),
     });

@@ -79,9 +79,10 @@ Edge cases:
 
 Business rules:
 - `name` aur `season` unique hone chahiye.
-- Status flow: `UPCOMING -> LIVE -> COMPLETED`.
+- Status flow: `UPCOMING -> LIVE -> COMPLETED [OR CANCELED]`.
 - Series delete se pehle check karo ki koi match exist to nahi karta.
-- Series is the only module to create a new match for the series .
+- Series create/edit me match type choose hoga: `T20`, `ODI`, `TEST`.
+- Series module team selection and lifecycle manage karega; match create Matches module se hoga.
 
 Edge cases:
 - for series only who have minimum 11 palyer in the squad is allowd , 
@@ -92,6 +93,7 @@ Edge cases:
 
 
 flow:
+-Series status will update automatically to live when start selected date comes
 -ADMIN Start date and End Date (date can be edited latter),name and seasion degaa 
 -ONly allowd team will show to admin for add the teams into series
 -then We have 3 type format  A/B/C 
@@ -104,9 +106,10 @@ flow:
 
 - then ADMIN  will deisde number of matches . And can edit latter if need the number of matches
 
--Then admin will create match's ,In the time of creating matches uses select 2 temas ,date,
-
--All the matches are shows in the matches tab in the frontend . and show the match edit button in every created match . (Admin only)
+-Then admin Matches panel me series select karke match create karega.
+-Match create karte waqt selected series ki teams me se hi 2 different teams select hongi, date/time aur venue diya jayega.
+-All the matches are shown in the Matches tab in the frontend. Match edit button every upcoming match par dikhega. (Admin only)
+- Matches tab se match lifecycle status next step me update hoga.
 
 
 Public visibility:
@@ -127,8 +130,13 @@ UPCOMING
 ```
 
 Edge cases:
+- Match create karne ke liye `seriesId` required hai; standalone match create allowed nahi hai.
+- Series ke bina match create nahi hoga.
+- Match ke teams wahi honge jo selected series me added hain.
+- Same team dono sides par frontend aur backend dono me block.
 - Match create tabhi jab dono teams ki squad me minimum 11 players hon.
 - Same team dono sides par block.
+- Playing XI panel me sirf `TOSS_COMPLETED` matches dikhenge.
 - Toss already completed ho to toss record block.
 - Playing XI ke bina match start block.
 - LIVE match delete block ya strong warning.
@@ -160,12 +168,18 @@ Edge cases:
 Business rules:
 - Score document per innings hota hai.
 - Match `LIVE` hona chahiye.
+- Har ball update DB me `score_events` history ke roop me save hoga.
+- `T20` me max 2 innings aur 20 overs per innings.
+- `ODI` me max 2 innings aur 50 overs per innings.
+- Next innings tabhi start hogi jab previous innings overs complete, all-out, ya chase target achieved ho.
 - Overs format `X.Y`, where `Y` must be 0-5.
-- 2nd innings me `target` optional ho sakta hai.
+- 2nd innings target previous innings runs + 1 se auto set hoga.
 - Har update par Socket.IO event: `score.updated`.
 
 Edge cases:
 - Same innings score dobara create na ho; update use karo.
+- `T20`/`ODI` me 3rd/4th innings block.
+- Previous innings complete nahi hai to next innings block.
 - Wickets max 10.
 - Overs invalid like `10.7` block.
 - `runRate` negative block.
@@ -174,6 +188,7 @@ Edge cases:
 
 Business rules:
 - Match `LIVE` hona chahiye.
+- Commentary scored ball event se attach ho sakti hai; agar event nahi diya to latest scored ball use karo.
 - Types: `NORMAL`, `FOUR`, `SIX`, `WICKET`, `MILESTONE`.
 - Ball 1-6 only, over 0 se start.
 - Fetch reverse chronological order me.
