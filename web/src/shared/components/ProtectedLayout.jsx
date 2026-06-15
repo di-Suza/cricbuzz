@@ -57,7 +57,7 @@ function ProtectedLayout({ routes }) {
 
       <div className="lg:pl-[17rem]">
         <header className="sticky top-0 z-20 border-b border-[#22292c] bg-[#0d1211]/95 shadow-[0_18px_40px_rgba(0,0,0,0.22)] backdrop-blur">
-          <div className="mx-auto flex min-h-16 max-w-[1400px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-[#a9c3ff]">
                 {ROLE_LABELS[user?.role] || 'Signed in'}
@@ -100,7 +100,7 @@ function ProtectedLayout({ routes }) {
           ))}
         </nav>
 
-        <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
+        <main className="px-4 py-6 sm:px-6 lg:px-8">
           <Outlet />
         </main>
       </div>
