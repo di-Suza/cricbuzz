@@ -42,6 +42,15 @@ const protectedRoutes = [
     element: <TeamsPage />,
     nav: true,
   },
+   {
+    id: 'squads',
+    path: 'squads',
+    label: 'Squads',
+    module: 'Squad Management',
+    roles: CONTENT_ROLES,
+    element: <SquadsPage />,
+    nav: true,
+  },
   {
     id: 'players',
     path: 'players',
@@ -52,15 +61,7 @@ const protectedRoutes = [
     nav: true,
   },
 
-  {
-    id: 'squads',
-    path: 'squads',
-    label: 'Squads',
-    module: 'Squad Management',
-    roles: CONTENT_ROLES,
-    element: <SquadsPage />,
-    nav: true,
-  },
+ 
   {
     id: 'series',
     path: 'series',
