@@ -1,6 +1,7 @@
 import { MATCH_STATUS_FLOW, MatchStatus } from '../../shared/constants/matchStatus.js';
 import { BadRequestError, ConflictError, NotFoundError } from '../../shared/errors/index.js';
-import { emitToMatch } from '../../sockets/socketGateway.js';
+import { emitPublic, emitToMatch } from '../../sockets/socketGateway.js';
+import responseCache from '../user/cache/responseCache.js';
 import { ScaffoldService } from '../../shared/utils/moduleScaffold.js';
 import matchRepository from './match.repository.js';
 
@@ -125,6 +126,12 @@ class MatchService extends ScaffoldService {
     if (match.status === MatchStatus.COMPLETED) {
       emitToMatch(match._id, 'match.completed', payload);
     }
+
+    emitPublic('public.feed.updated', {
+      matchId: String(match._id),
+      reason: 'match.status.updated',
+      status: match.status,
+    });
   }
 
   async getAllMatches(query = {}) {
@@ -155,7 +162,7 @@ class MatchService extends ScaffoldService {
     this.assertScheduleWithinSeries(series, data.scheduledAt);
 
     const userId = this.getUserId(requester);
-    return this.repository.create({
+    const created = await this.repository.create({
       series: data.seriesId,
       team1: data.team1,
       team2: data.team2,
@@ -165,6 +172,10 @@ class MatchService extends ScaffoldService {
       status: MatchStatus.UPCOMING,
       ...(userId ? { createdBy: userId, updatedBy: userId } : {}),
     });
+
+    await responseCache.clear();
+    emitPublic('public.feed.updated', { matchId: String(created._id), reason: 'match.created' });
+    return created;
   }
 
   async updateMatch(id, data, requester = null) {
@@ -198,6 +209,8 @@ class MatchService extends ScaffoldService {
 
     const updated = await this.repository.update(id, payload);
     if (!updated) throw new NotFoundError('Match not found');
+    await responseCache.clear();
+    emitPublic('public.feed.updated', { matchId: String(updated._id), reason: 'match.updated' });
     return updated;
   }
 
@@ -231,6 +244,7 @@ class MatchService extends ScaffoldService {
     });
 
     if (!updated) throw new NotFoundError('Match not found');
+    await responseCache.clear();
     this.emitStatusEvents(updated);
     return updated;
   }
@@ -254,8 +268,10 @@ class MatchService extends ScaffoldService {
     if (!updated) throw new NotFoundError('Match not found');
 
     const payload = { matchId: String(updated._id), match: updated };
+    await responseCache.clear();
     emitToMatch(updated._id, 'toss.updated', payload);
     emitToMatch(updated._id, 'match.status.updated', payload);
+    emitPublic('public.feed.updated', { matchId: String(updated._id), reason: 'toss.updated', status: updated.status });
     return updated;
   }
 
@@ -276,6 +292,7 @@ class MatchService extends ScaffoldService {
     });
 
     if (!updated) throw new NotFoundError('Match not found');
+    await responseCache.clear();
     this.emitStatusEvents(updated);
     return updated;
   }
@@ -297,6 +314,7 @@ class MatchService extends ScaffoldService {
     });
 
     if (!updated) throw new NotFoundError('Match not found');
+    await responseCache.clear();
     this.emitStatusEvents(updated);
     return updated;
   }
@@ -310,6 +328,8 @@ class MatchService extends ScaffoldService {
 
     const deleted = await this.repository.delete(id, this.getUserId(requester));
     if (!deleted) throw new NotFoundError('Match not found');
+    await responseCache.clear();
+    emitPublic('public.feed.updated', { matchId: String(id), reason: 'match.deleted' });
     return deleted;
   }
 }

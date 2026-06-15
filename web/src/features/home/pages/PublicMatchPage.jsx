@@ -8,6 +8,10 @@ function getTeamName(team) {
   return team?.shortName || team?.name || 'Team';
 }
 
+function getPlayerId(player) {
+  return String(player?._id || player?.id || player || '');
+}
+
 function getFullTeamName(team) {
   return team?.name || team?.shortName || 'Team';
 }
@@ -144,9 +148,16 @@ function MatchPulse({ recentEvents = [], liveScore }) {
   );
 }
 
-function LiveBatting({ stats = [] }) {
-  const rows = stats.find((entry) => entry.batting?.some((row) => row.balls > 0))?.batting || stats.at(-1)?.batting || [];
-  const activeRows = rows.filter((row) => row.balls > 0 || !row.isOut).slice(0, 4);
+function LiveBatting({ stats = [], liveScore }) {
+  const currentInnings = Number(liveScore?.innings || stats.at(-1)?.innings || 1);
+  const rows = stats.find((entry) => Number(entry.innings) === currentInnings)?.batting || [];
+  const strikerId = getPlayerId(liveScore?.currentStriker);
+  const nonStrikerId = getPlayerId(liveScore?.currentNonStriker);
+  const activeIds = new Set([strikerId, nonStrikerId].filter(Boolean));
+  const activeRows = [
+    ...rows.filter((row) => activeIds.has(getPlayerId(row.player))),
+    ...rows.filter((row) => !activeIds.has(getPlayerId(row.player)) && row.balls > 0 && !row.isOut),
+  ].slice(0, 4);
 
   return (
     <section className="rounded-2xl border border-[#26282b] bg-[#1a1c1e] p-6 shadow-sm">
@@ -166,19 +177,23 @@ function LiveBatting({ stats = [] }) {
           {activeRows.length === 0 ? (
             <p className="text-sm text-[#87909e] px-4">Batting card will appear once scoring starts.</p>
           ) : (
-            activeRows.map((row, i) => (
+            activeRows.map((row) => {
+              const isStriker = getPlayerId(row.player) === strikerId;
+
+              return (
               <div key={row.player?._id || row.player?.name} className={`relative grid grid-cols-[1fr_auto_auto_auto_auto_auto] items-center gap-4 py-1.5 px-4`}>
                 {/* Active marker for striker */}
-                {i === 0 && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#8ba4fc] rounded-r-sm" />}
+                {isStriker && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#8ba4fc] rounded-r-sm" />}
                 
-                <span className="font-black text-[#e0e3e8] truncate">{row.player?.name}{i===0 ? '*' : ''}</span>
-                <span className={`w-6 text-center font-black ${i===0 ? 'text-[#a9c3ff]' : 'text-white'}`}>{row.runs}</span>
+                <span className="font-black text-[#e0e3e8] truncate">{row.player?.name}{isStriker ? '*' : ''}</span>
+                <span className={`w-6 text-center font-black ${isStriker ? 'text-[#a9c3ff]' : 'text-white'}`}>{row.runs}</span>
                 <span className="w-6 text-center font-bold text-[#d3d7de]">{row.balls}</span>
                 <span className="w-6 text-center font-bold text-[#d3d7de]">{row.fours}</span>
                 <span className="w-6 text-center font-bold text-[#d3d7de]">{row.sixes}</span>
                 <span className="w-10 text-right font-black text-[#d3d7de]">{((row.runs / (row.balls || 1)) * 100).toFixed(1)}</span>
               </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
@@ -290,12 +305,11 @@ function PublicMatchPage() {
   } = useGetPublicMatchCommentaryQuery({ matchId, limit: 30 }, { skip: !matchId });
 
   const match = data?.matchInfo;
-  const live = isLiveStatus(match?.status);
   const upcoming = isUpcomingStatus(match?.status);
   const result = isResultStatus(match?.status);
 
   useEffect(() => {
-    if (!matchId || !live) return undefined;
+    if (!matchId) return undefined;
 
     const socket = getSocket();
     socket.connect();
@@ -306,11 +320,21 @@ function PublicMatchPage() {
       refetchCommentary();
     };
 
+    const refreshCurrentMatch = (payload = {}) => {
+      if (!payload.matchId || String(payload.matchId) === String(matchId)) {
+        refreshAll();
+      }
+    };
+
     socket.on('score.updated', refreshAll);
     socket.on('commentary.created', refreshAll);
     socket.on('commentary.deleted', refreshAll);
     socket.on('match.status.updated', refreshAll);
+    socket.on('match.started', refreshAll);
     socket.on('match.completed', refreshAll);
+    socket.on('toss.updated', refreshAll);
+    socket.on('playingXI.updated', refreshAll);
+    socket.on('public.feed.updated', refreshCurrentMatch);
 
     return () => {
       socket.emit('match:leave', matchId);
@@ -318,9 +342,13 @@ function PublicMatchPage() {
       socket.off('commentary.created', refreshAll);
       socket.off('commentary.deleted', refreshAll);
       socket.off('match.status.updated', refreshAll);
+      socket.off('match.started', refreshAll);
       socket.off('match.completed', refreshAll);
+      socket.off('toss.updated', refreshAll);
+      socket.off('playingXI.updated', refreshAll);
+      socket.off('public.feed.updated', refreshCurrentMatch);
     };
-  }, [live, matchId, refetchCenter, refetchCommentary]);
+  }, [matchId, refetchCenter, refetchCommentary]);
 
   if (isLoading) {
     return <div className="mx-auto max-w-7xl px-4 py-10 text-[#aeb5c0]">Loading match...</div>;
@@ -356,7 +384,7 @@ function PublicMatchPage() {
 
               <aside className="space-y-6">
                 <MatchPulse recentEvents={data.recentEvents || []} liveScore={data.liveScore} />
-                <LiveBatting stats={data.stats || []} />
+                <LiveBatting stats={data.stats || []} liveScore={data.liveScore} />
                 <CommentaryPanel commentary={commentaryResponse.data || []} />
               </aside>
             </div>

@@ -1,6 +1,7 @@
 import { MatchStatus } from '../../shared/constants/matchStatus.js';
 import { BadRequestError, ConflictError, NotFoundError } from '../../shared/errors/index.js';
-import { emitToMatch } from '../../sockets/socketGateway.js';
+import { emitPublic, emitToMatch } from '../../sockets/socketGateway.js';
+import responseCache from '../user/cache/responseCache.js';
 import { ScaffoldService } from '../../shared/utils/moduleScaffold.js';
 import playingXiRepository from './playingXi.repository.js';
 
@@ -111,6 +112,7 @@ class PlayingXiService extends ScaffoldService {
       throw new ConflictError('Playing XI could not be saved because match status changed');
     }
 
+    await responseCache.clear();
     emitToMatch(matchId, 'playingXI.updated', {
       matchId: String(matchId),
       match: updated,
@@ -119,6 +121,7 @@ class PlayingXiService extends ScaffoldService {
       matchId: String(matchId),
       match: updated,
     });
+    emitPublic('public.feed.updated', { matchId: String(matchId), reason: 'playingXI.updated' });
 
     return updated;
   }

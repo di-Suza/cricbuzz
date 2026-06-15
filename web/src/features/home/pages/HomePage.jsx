@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router';
+import { getSocket } from '../../../shared/socket/socketClient.js';
 import { useGetHomeStatusQuery } from '../api/homeApi.js';
 
 function getTeamName(team) {
@@ -125,10 +127,25 @@ function StoryCard() {
 }
 
 function HomePage() {
-  const { data, isLoading } = useGetHomeStatusQuery();
+  const { data, isLoading, refetch } = useGetHomeStatusQuery();
   const liveMatches = data?.liveMatches || [];
   const upcomingMatches = data?.upcomingMatches || [];
   const recentMatches = data?.recentMatches || [];
+
+  useEffect(() => {
+    const socket = getSocket();
+    socket.connect();
+
+    const refreshHome = () => {
+      refetch();
+    };
+
+    socket.on('public.feed.updated', refreshHome);
+
+    return () => {
+      socket.off('public.feed.updated', refreshHome);
+    };
+  }, [refetch]);
 
   return (
     <section className="min-h-screen bg-[#141517] text-white">

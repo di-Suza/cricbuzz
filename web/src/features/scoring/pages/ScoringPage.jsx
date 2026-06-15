@@ -9,6 +9,7 @@ import { useAddScoreBallMutation, useGetScoreboardQuery } from '../api/scoringAp
 const RUN_OPTIONS = [0, 1, 2, 3, 4, 5, 6];
 const EXTRA_TYPES = ['NONE', 'WIDE', 'NO_BALL', 'BYE', 'LEG_BYE'];
 const WICKET_TYPES = ['BOWLED', 'CAUGHT', 'LBW', 'RUN_OUT', 'STUMPED', 'HIT_WICKET', 'RETIRED_HURT', 'OTHER'];
+const EMPTY_ARRAY = Object.freeze([]);
 const MATCH_SCORING_RULES = {
   T20: { maxInnings: 2, maxBallsPerInnings: 120, maxOvers: 20 },
   ODI: { maxInnings: 2, maxBallsPerInnings: 300, maxOvers: 50 },
@@ -30,6 +31,10 @@ function getTeamName(team) {
 
 function getPlayerName(player) {
   return player?.name || 'Player';
+}
+
+function getPlayerId(player) {
+  return String(player?._id || player?.id || player?.player?._id || player?.player || player || '');
 }
 
 function formatEvent(event) {
@@ -89,15 +94,35 @@ function getLineupPlayers(match, teamId) {
 }
 
 function hasPlayer(players = [], playerId) {
-  return players.some((player) => String(player._id) === String(playerId));
+  return players.some((player) => getPlayerId(player) === String(playerId));
 }
 
 function findPlayer(players = [], playerId) {
-  return players.find((player) => String(player._id) === String(playerId)) || null;
+  return players.find((player) => getPlayerId(player) === String(playerId)) || null;
 }
 
 function getPlayerStat(stats = [], playerId) {
-  return stats.find((row) => String(row.player?._id || row.player?.id) === String(playerId)) || null;
+  return stats.find((row) => getPlayerId(row.player) === String(playerId)) || null;
+}
+
+function createEmptyBattingStat(player, isOut = false) {
+  return {
+    player,
+    runs: 0,
+    balls: 0,
+    fours: 0,
+    sixes: 0,
+    isOut,
+  };
+}
+
+function createEmptyBowlingStat(player) {
+  return {
+    player,
+    overs: '0.0',
+    runsConceded: 0,
+    wickets: 0,
+  };
 }
 
 function ScoreCard({ score, team }) {
@@ -207,6 +232,7 @@ function BatterCard({ label, player, stat }) {
 function ScoringPage() {
   const toast = useToast();
   const [activeMatchId, setActiveMatchId] = useState('');
+  const [localDismissedByInnings, setLocalDismissedByInnings] = useState({});
   const [form, setForm] = useState({
     innings: 1,
     battingTeam: '',
@@ -267,19 +293,57 @@ function ScoringPage() {
     () => (scoreboard?.stats || []).find((entry) => Number(entry.innings) === selectedInnings) || null,
     [scoreboard?.stats, selectedInnings]
   );
-  const battingStats = inningsStats?.batting || [];
+  const inningsPlayerMeta = useMemo(
+    () => (scoreboard?.inningsPlayerMeta || []).find((entry) => Number(entry.innings) === selectedInnings) || null,
+    [scoreboard?.inningsPlayerMeta, selectedInnings]
+  );
+  const battingStats = inningsStats?.batting || EMPTY_ARRAY;
+  const bowlingStats = inningsStats?.bowling || EMPTY_ARRAY;
+  const metaDismissedIds = inningsPlayerMeta?.dismissedPlayerIds || EMPTY_ARRAY;
+  const recentDismissedIds = useMemo(
+    () => recentEvents
+      .filter((event) => Number(event.innings) === selectedInnings && event.dismissedPlayer)
+      .map((event) => getPlayerId(event.dismissedPlayer)),
+    [recentEvents, selectedInnings]
+  );
+  const localDismissedIds = localDismissedByInnings[selectedInnings] || EMPTY_ARRAY;
   const dismissedBatterIds = useMemo(
-    () => new Set(battingStats.filter((row) => row.isOut).map((row) => getTeamId(row.player))),
-    [battingStats]
+    () => new Set([
+      ...battingStats.filter((row) => row.isOut).map((row) => getPlayerId(row.player)),
+      ...metaDismissedIds.map((playerId) => String(playerId)),
+      ...recentDismissedIds,
+      ...localDismissedIds,
+    ]),
+    [battingStats, localDismissedIds, metaDismissedIds, recentDismissedIds]
   );
   const availableBatters = useMemo(
-    () => battingPlayers.filter((player) => !dismissedBatterIds.has(getTeamId(player))),
+    () => battingPlayers.filter((player) => !dismissedBatterIds.has(getPlayerId(player))),
     [battingPlayers, dismissedBatterIds]
+  );
+  const newBatterSource = inningsPlayerMeta ? (inningsPlayerMeta.availableNewBatters || EMPTY_ARRAY) : battingPlayers;
+  const newBatterOptions = useMemo(
+    () => newBatterSource.filter((player) => {
+      const playerId = getPlayerId(player);
+      return playerId
+        && !dismissedBatterIds.has(playerId)
+        && ![form.striker, form.nonStriker].includes(playerId);
+    }),
+    [dismissedBatterIds, form.nonStriker, form.striker, newBatterSource]
+  );
+  const battingRows = useMemo(
+    () => (battingStats.length > 0
+      ? battingStats
+      : battingPlayers.map((player) => createEmptyBattingStat(player, dismissedBatterIds.has(getPlayerId(player))))),
+    [battingPlayers, battingStats, dismissedBatterIds]
+  );
+  const bowlingRows = useMemo(
+    () => (bowlingStats.length > 0 ? bowlingStats : bowlingPlayers.map((player) => createEmptyBowlingStat(player))),
+    [bowlingPlayers, bowlingStats]
   );
   const strikerPlayer = findPlayer(battingPlayers, form.striker);
   const nonStrikerPlayer = findPlayer(battingPlayers, form.nonStriker);
-  const strikerStat = getPlayerStat(battingStats, form.striker);
-  const nonStrikerStat = getPlayerStat(battingStats, form.nonStriker);
+  const strikerStat = getPlayerStat(battingRows, form.striker);
+  const nonStrikerStat = getPlayerStat(battingRows, form.nonStriker);
   const isBattingPairLocked = Boolean(selectedScore?.currentStriker && selectedScore?.currentNonStriker);
   const needsNewBatter = Boolean(form.isWicket && (selectedScore?.wickets || 0) < 9);
   const canAddBall = Boolean(
@@ -293,7 +357,7 @@ function ScoringPage() {
     && hasPlayer(availableBatters, form.nonStriker)
     && (!needsNewBatter || (
       form.newBatter
-      && hasPlayer(availableBatters, form.newBatter)
+      && hasPlayer(newBatterOptions, form.newBatter)
       && ![form.striker, form.nonStriker].includes(String(form.newBatter))
     ))
     && isSelectedInningsAvailable
@@ -305,6 +369,10 @@ function ScoringPage() {
       setActiveMatchId(liveMatches[0]._id);
     }
   }, [activeMatchId, liveMatches]);
+
+  useEffect(() => {
+    setLocalDismissedByInnings({});
+  }, [activeMatchId]);
 
   useEffect(() => {
     if (!availableInnings.includes(Number(form.innings))) {
@@ -354,6 +422,10 @@ function ScoringPage() {
       next.newBatter = '';
     }
 
+    if (form.newBatter && !hasPlayer(newBatterOptions, form.newBatter)) {
+      next.newBatter = '';
+    }
+
     if (Object.keys(next).length > 0) {
       setForm((current) => ({ ...current, ...next }));
     }
@@ -365,6 +437,7 @@ function ScoringPage() {
     form.newBatter,
     form.nonStriker,
     form.striker,
+    newBatterOptions,
     selectedScore?.currentBowler,
     selectedScore?.currentNonStriker,
     selectedScore?.currentStriker,
@@ -429,6 +502,19 @@ function ScoringPage() {
     try {
       const result = await addScoreBall({ matchId: activeMatchId, body }).unwrap();
       const nextScore = result?.score;
+      const dismissedId = getPlayerId(result?.event?.dismissedPlayer || body.dismissedPlayer);
+
+      if (dismissedId) {
+        setLocalDismissedByInnings((current) => {
+          const inningsKey = Number(body.innings);
+          const existing = current[inningsKey] || [];
+          return {
+            ...current,
+            [inningsKey]: Array.from(new Set([...existing, dismissedId])),
+          };
+        });
+      }
+
       setForm((current) => ({
         ...current,
         striker: getTeamId(nextScore?.currentStriker) || current.striker,
@@ -549,8 +635,8 @@ function ScoringPage() {
               </div>
 
               <div className="grid gap-4 xl:grid-cols-2">
-                <PlayerStatsTable title={`Innings ${selectedInnings} Batting`} rows={inningsStats?.batting || []} type="batting" />
-                <PlayerStatsTable title={`Innings ${selectedInnings} Bowling`} rows={inningsStats?.bowling || []} type="bowling" />
+                <PlayerStatsTable title={`Innings ${selectedInnings} Batting`} rows={battingRows} type="batting" />
+                <PlayerStatsTable title={`Innings ${selectedInnings} Bowling`} rows={bowlingRows} type="bowling" />
               </div>
 
               <form onSubmit={handleSubmit} className="rounded-lg border border-slate-200 bg-white p-4">
@@ -615,9 +701,9 @@ function ScoringPage() {
                         className="mt-2 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm"
                       >
                         {availableBatters
-                          .filter((player) => String(player._id) !== String(form.nonStriker))
+                          .filter((player) => getPlayerId(player) !== String(form.nonStriker))
                           .map((player) => (
-                            <option key={player._id} value={player._id}>
+                            <option key={getPlayerId(player)} value={getPlayerId(player)}>
                               {getPlayerName(player)}
                             </option>
                           ))}
@@ -632,9 +718,9 @@ function ScoringPage() {
                         className="mt-2 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm"
                       >
                         {availableBatters
-                          .filter((player) => String(player._id) !== String(form.striker))
+                          .filter((player) => getPlayerId(player) !== String(form.striker))
                           .map((player) => (
-                            <option key={player._id} value={player._id}>
+                            <option key={getPlayerId(player)} value={getPlayerId(player)}>
                               {getPlayerName(player)}
                             </option>
                           ))}
@@ -755,7 +841,7 @@ function ScoringPage() {
                     className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm disabled:cursor-not-allowed disabled:bg-slate-100"
                   >
                     {[form.striker, form.nonStriker].filter(Boolean).map((playerId) => {
-                      const player = battingPlayers.find((item) => String(item._id) === String(playerId));
+                      const player = battingPlayers.find((item) => getPlayerId(item) === String(playerId));
                       return (
                         <option key={playerId} value={playerId}>{getPlayerName(player)}</option>
                       );
@@ -769,11 +855,9 @@ function ScoringPage() {
                     className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm disabled:cursor-not-allowed disabled:bg-slate-100"
                   >
                     <option value="">New batter</option>
-                    {availableBatters
-                      .filter((player) => ![form.striker, form.nonStriker].includes(String(player._id)))
-                      .map((player) => (
-                        <option key={player._id} value={player._id}>{getPlayerName(player)}</option>
-                      ))}
+                    {newBatterOptions.map((player) => (
+                      <option key={getPlayerId(player)} value={getPlayerId(player)}>{getPlayerName(player)}</option>
+                    ))}
                   </select>
                 </div>
 

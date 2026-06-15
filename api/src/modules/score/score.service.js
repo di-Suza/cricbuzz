@@ -1,6 +1,7 @@
 import { MatchStatus } from '../../shared/constants/matchStatus.js';
 import { BadRequestError, ConflictError, NotFoundError } from '../../shared/errors/index.js';
-import { emitToMatch } from '../../sockets/socketGateway.js';
+import { emitPublic, emitToMatch } from '../../sockets/socketGateway.js';
+import responseCache from '../user/cache/responseCache.js';
 import { ScaffoldService } from '../../shared/utils/moduleScaffold.js';
 import scoreRepository from './score.repository.js';
 
@@ -57,10 +58,14 @@ class ScoreService extends ScaffoldService {
   }
 
   getLineupForTeam(match, teamId) {
-    const requestedTeamId = String(teamId);
+    const requestedTeamId = this.getTeamId(teamId);
     if (requestedTeamId === this.getTeamId(match.team1)) return match.playingXI?.team1 || [];
     if (requestedTeamId === this.getTeamId(match.team2)) return match.playingXI?.team2 || [];
     return [];
+  }
+
+  getLineupPlayers(match, teamId) {
+    return this.getLineupForTeam(match, teamId).map((entry) => entry.player).filter(Boolean);
   }
 
   getLineupPlayerIds(match, teamId) {
@@ -68,10 +73,11 @@ class ScoreService extends ScaffoldService {
   }
 
   getOppositeTeamId(match, teamId) {
+    const requestedTeamId = this.getTeamId(teamId);
     const team1Id = this.getTeamId(match.team1);
     const team2Id = this.getTeamId(match.team2);
-    if (String(teamId) === team1Id) return team2Id;
-    if (String(teamId) === team2Id) return team1Id;
+    if (requestedTeamId === team1Id) return team2Id;
+    if (requestedTeamId === team2Id) return team1Id;
     return null;
   }
 
@@ -89,11 +95,12 @@ class ScoreService extends ScaffoldService {
   }
 
   resolveBowlingTeam(match, battingTeamId) {
+    const requestedTeamId = this.getTeamId(battingTeamId);
     const team1Id = this.getTeamId(match.team1);
     const team2Id = this.getTeamId(match.team2);
 
-    if (String(battingTeamId) === team1Id) return team2Id;
-    if (String(battingTeamId) === team2Id) return team1Id;
+    if (requestedTeamId === team1Id) return team2Id;
+    if (requestedTeamId === team2Id) return team1Id;
 
     throw new BadRequestError('Batting team must be one of the match teams');
   }
@@ -102,7 +109,7 @@ class ScoreService extends ScaffoldService {
     if (Number(data.innings) !== 1) return;
 
     const expectedTeam = this.getExpectedFirstBattingTeam(match);
-    if (expectedTeam && expectedTeam !== String(data.battingTeam)) {
+    if (expectedTeam && expectedTeam !== this.getTeamId(data.battingTeam)) {
       throw new BadRequestError('First innings batting team must follow the toss decision');
     }
   }
@@ -121,12 +128,49 @@ class ScoreService extends ScaffoldService {
     );
   }
 
+  getAvailableBattingIds(match, battingTeamId, dismissedIds) {
+    return this.getLineupForTeam(match, battingTeamId)
+      .map((entry) => this.getPlayerId(entry.player))
+      .filter((playerId) => playerId && !dismissedIds.has(playerId));
+  }
+
+  pickAvailablePlayer(preferredIds = [], availableIds = [], blockedIds = new Set()) {
+    const preferred = preferredIds.find((playerId) => playerId && availableIds.includes(playerId) && !blockedIds.has(playerId));
+    if (preferred) return preferred;
+
+    return availableIds.find((playerId) => !blockedIds.has(playerId)) || '';
+  }
+
+  resolveActiveBatters(match, score, data, events = []) {
+    const dismissedIds = this.getDismissedPlayerIds(events, data.innings);
+    const availableIds = this.getAvailableBattingIds(match, data.battingTeam, dismissedIds);
+    const scoreStriker = this.getPlayerId(score?.currentStriker);
+    const scoreNonStriker = this.getPlayerId(score?.currentNonStriker);
+    const dataStriker = this.getPlayerId(data.striker);
+    const dataNonStriker = this.getPlayerId(data.nonStriker);
+
+    const striker = this.pickAvailablePlayer(
+      score ? [scoreStriker, dataStriker] : [dataStriker, scoreStriker],
+      availableIds
+    );
+    const nonStriker = this.pickAvailablePlayer(
+      score ? [scoreNonStriker, dataNonStriker] : [dataNonStriker, scoreNonStriker],
+      availableIds,
+      new Set([striker])
+    );
+
+    return {
+      striker,
+      nonStriker,
+      dismissedIds,
+    };
+  }
+
   resolveBallPlayers(match, score, data, events = []) {
     const battingIds = this.getLineupPlayerIds(match, data.battingTeam);
     const bowlingTeam = this.resolveBowlingTeam(match, data.battingTeam);
     const bowlingIds = this.getLineupPlayerIds(match, bowlingTeam);
-    const striker = data.striker || this.getPlayerId(score?.currentStriker);
-    const nonStriker = data.nonStriker || this.getPlayerId(score?.currentNonStriker);
+    const { striker, nonStriker, dismissedIds } = this.resolveActiveBatters(match, score, data, events);
     const bowler = data.bowler || this.getPlayerId(score?.currentBowler);
 
     if (!striker || !nonStriker || !bowler) {
@@ -146,7 +190,6 @@ class ScoreService extends ScaffoldService {
       throw new BadRequestError('Dismissed player must be the striker or non-striker');
     }
 
-    const dismissedIds = this.getDismissedPlayerIds(events, data.innings);
     if (dismissedIds.has(striker) || dismissedIds.has(nonStriker)) {
       throw new ConflictError('Dismissed players cannot continue batting');
     }
@@ -220,7 +263,7 @@ class ScoreService extends ScaffoldService {
 
     if (['T20', 'ODI'].includes(match.matchType) && data.innings === 2) {
       const firstInnings = this.getScoreByInnings(scores, 1);
-      if (firstInnings && this.getTeamId(firstInnings.battingTeam) === String(data.battingTeam)) {
+      if (firstInnings && this.getTeamId(firstInnings.battingTeam) === this.getTeamId(data.battingTeam)) {
         throw new BadRequestError('Second innings batting team must be the opposite team');
       }
     }
@@ -246,6 +289,7 @@ class ScoreService extends ScaffoldService {
       scores,
       recentEvents,
       stats: this.calculateScoreStats(match, scores, events),
+      inningsPlayerMeta: this.getInningsPlayerMeta(match, scores, events),
       fallOfWickets: this.calculateFallOfWickets(events),
     };
   }
@@ -340,6 +384,28 @@ class ScoreService extends ScaffoldService {
         innings: score.innings,
         batting: Array.from(batting.values()),
         bowling: Array.from(bowling.values()),
+      };
+    });
+  }
+
+  getInningsPlayerMeta(match, scores = [], events = []) {
+    return scores.map((score) => {
+      const dismissedIds = this.getDismissedPlayerIds(events, score.innings);
+      const activeBatterIds = [
+        this.getPlayerId(score.currentStriker),
+        this.getPlayerId(score.currentNonStriker),
+      ].filter(Boolean);
+      const activeBatterSet = new Set(activeBatterIds);
+
+      return {
+        innings: score.innings,
+        battingTeam: score.battingTeam,
+        dismissedPlayerIds: Array.from(dismissedIds),
+        activeBatterIds,
+        availableNewBatters: this.getLineupPlayers(match, score.battingTeam).filter((player) => {
+          const playerId = this.getPlayerId(player);
+          return playerId && !dismissedIds.has(playerId) && !activeBatterSet.has(playerId);
+        }),
       };
     });
   }
@@ -488,7 +554,9 @@ class ScoreService extends ScaffoldService {
       event,
     };
 
+    await responseCache.clear();
     emitToMatch(match._id, 'score.updated', payload);
+    emitPublic('public.feed.updated', { matchId: String(match._id), reason: 'score.updated' });
     return payload;
   }
 }

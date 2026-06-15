@@ -21,6 +21,7 @@ const envSchema = z
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
     RATE_LIMIT_WINDOW_MS: z.coerce.number().int().min(1000).default(15 * 60 * 1000),
     RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(300),
+    REDIS_URL: z.string().trim().min(1).default('redis://localhost:6379'),
     SUPER_ADMIN_NAME: z.string().trim().min(2).default('Super Admin'),
     SUPER_ADMIN_EMAIL: z.string().trim().email().optional(),
     SUPER_ADMIN_PASSWORD: z.string().min(8).optional(),

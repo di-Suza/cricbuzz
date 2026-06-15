@@ -8,6 +8,7 @@
     "dev:web": "npm --prefix web run dev",
     "start:api": "npm --prefix api run start",
     "seed:super-admin": "npm --prefix api run seed:super-admin",
+    "seed:demo": "npm --prefix api run seed:demo",
     "build:web": "npm --prefix web run build",
     "check:api": "npm --prefix api run check"
   }

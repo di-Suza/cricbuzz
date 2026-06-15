@@ -78,7 +78,7 @@ class MatchPublicService {
 
   async getMatchCenter(matchId) {
     const scoreboard = await scoreService.getScoreboard(matchId);
-    const { match, scores, recentEvents, stats } = scoreboard;
+    const { match, scores, recentEvents, stats, inningsPlayerMeta, fallOfWickets } = scoreboard;
     const liveScore = scores[scores.length - 1] || null;
 
     return {
@@ -87,6 +87,8 @@ class MatchPublicService {
       scores,
       recentEvents,
       stats,
+      inningsPlayerMeta,
+      fallOfWickets,
       playingXI: match.playingXI,
       result: match.status === MatchStatus.COMPLETED ? { winner: match.winner, result: match.result } : null,
     };
