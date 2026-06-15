@@ -8,6 +8,15 @@ class SeriesPublicService {
     this.repository = repository;
   }
 
+
+    getListFilters(query = {}) {
+    return {
+      search: query.search,
+      status: query.status,
+      format: query.format,
+    };
+  }
+
   getPagination(query = {}) {
     return {
       page: query.page || 1,
@@ -15,13 +24,6 @@ class SeriesPublicService {
     };
   }
 
-  getListFilters(query = {}) {
-    return {
-      search: query.search,
-      status: query.status,
-      format: query.format,
-    };
-  }
 
   serializeTeam(entry) {
     const team = entry.team?.toObject ? entry.team.toObject() : entry.team;
