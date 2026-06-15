@@ -89,7 +89,7 @@ class ScoreService extends ScaffoldService {
 
   assertLiveMatch(match) {
     if (!match) throw new NotFoundError('Match not found');
-    if (match.status !== MatchStatus.LIVE) {
+    if (![MatchStatus.LIVE, MatchStatus.INNINGS_BREAK].includes(match.status)) {
       throw new ConflictError('Score can only be updated for live matches');
     }
   }
@@ -475,6 +475,14 @@ class ScoreService extends ScaffoldService {
   async addBall(matchId, data, requester = null) {
     const match = await this.repository.findMatch(matchId);
     this.assertLiveMatch(match);
+    
+    if (match.status === MatchStatus.INNINGS_BREAK) {
+      match.status = MatchStatus.LIVE;
+      await match.save();
+      emitToMatch(matchId, 'match.status.updated', { matchId: String(matchId), status: MatchStatus.LIVE });
+      emitPublic('public.feed.updated', { matchId: String(matchId), reason: 'match.status.updated' });
+    }
+    
     const { rules, scores } = await this.assertInningsCanStart(match, data);
     const events = await this.repository.findAllEvents(matchId);
     const existingScore = await this.repository.findScore(match._id, data.innings);

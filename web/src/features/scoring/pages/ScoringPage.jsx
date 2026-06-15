@@ -105,7 +105,7 @@ function ScoringPage() {
   const previousScore = selectedInnings > 1 ? getScoreByInnings(scoresByInnings, selectedInnings - 1) : null;
   const isSelectedInningsAvailable = availableInnings.includes(selectedInnings);
   const isSelectedInningsComplete = isInningsComplete(selectedScore, scoringRules);
-  
+
   const expectedBattingTeam = useMemo(
     () => (
       selectedInnings === 1
@@ -116,7 +116,7 @@ function ScoringPage() {
     ),
     [activeMatch, scoresByInnings, selectedInnings, teams]
   );
-  
+
   const lockedBattingTeam = selectedScore?.battingTeam || expectedBattingTeam;
   const isBattingTeamLocked = Boolean(lockedBattingTeam);
   const bowlingTeam = useMemo(() => getOppositeTeam(teams, form.battingTeam), [form.battingTeam, teams]);
@@ -177,7 +177,7 @@ function ScoringPage() {
   const nonStrikerPlayer = findPlayer(battingPlayers, form.nonStriker);
   const strikerStat = getPlayerStat(battingRows, form.striker);
   const nonStrikerStat = getPlayerStat(battingRows, form.nonStriker);
-  
+
   const bowlerPlayer = findPlayer(bowlingPlayers, form.bowler);
   const bowlerStat = getPlayerStat(bowlingRows, form.bowler);
 
@@ -374,7 +374,7 @@ function ScoringPage() {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 min-h-[calc(100vh-120px)] text-[#d3d7de]">
-      
+
       {/* LEFT COLUMN: Live Matches */}
       <aside className="w-full lg:w-[280px] flex-shrink-0 flex flex-col gap-4">
         <div className="flex items-center gap-2 mb-2">
@@ -393,7 +393,7 @@ function ScoringPage() {
             const team2Name = getTeamName(match.team2);
             const s1 = isSelected ? getScoreByInnings(scoreboard?.scores || [], 1) : null;
             const s2 = isSelected ? getScoreByInnings(scoreboard?.scores || [], 2) : null;
-            
+
             return (
               <button
                 type="button"
@@ -408,7 +408,7 @@ function ScoringPage() {
                   </span>
                   <span className="text-[10px] font-bold text-[#87909e] uppercase tracking-widest">{match.matchType || 'T20'}</span>
                 </div>
-                
+
                 {isSelected ? (
                   <>
                     <div className="flex items-center justify-between w-full mb-1">
@@ -483,13 +483,13 @@ function ScoringPage() {
 
             {/* Players Area */}
             <div className="grid gap-6 xl:grid-cols-2">
-              
+
               {/* Batting Pair */}
               <div className="flex flex-col rounded-xl border border-[#26282b] bg-[#1e2023] overflow-hidden">
                 <div className="border-b border-[#26282b] bg-[#1a1c1e] px-4 py-3">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-[#87909e]">BATTING PAIR</p>
                 </div>
-                
+
                 <div className="p-4 space-y-3 flex-1 flex flex-col">
                   {isBattingPairLocked ? (
                     <>
@@ -600,11 +600,10 @@ function ScoringPage() {
                       key={run}
                       onClick={() => setField('runs', run)}
                       disabled={!canAddBall}
-                      className={`h-14 rounded-lg text-xl font-black transition ${
-                        Number(form.runs) === run
+                      className={`h-14 rounded-lg text-xl font-black transition ${Number(form.runs) === run
                           ? 'bg-[#3c3e42] text-white border border-[#87909e]'
                           : 'bg-[#2a2c30] text-[#a0a5ad] border border-transparent hover:bg-[#3c3e42] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed'
-                      }`}
+                        }`}
                     >
                       {run}
                     </button>
@@ -676,10 +675,10 @@ function ScoringPage() {
                     {addState.isLoading ? 'COMMITTING...' : 'COMMIT BALL'}
                   </button>
                   {!canAddBall && !isSelectedInningsComplete && (
-                     <p className="text-center text-xs text-[#f43f5e] mt-2">Please ensure all player selections are completed.</p>
+                    <p className="text-center text-xs text-[#f43f5e] mt-2">Please ensure all player selections are completed.</p>
                   )}
                   {isSelectedInningsComplete && (
-                     <p className="text-center text-xs text-[#eab308] mt-2">Innings {selectedInnings} is complete. Change innings to continue.</p>
+                    <p className="text-center text-xs text-[#eab308] mt-2">Innings {selectedInnings} is complete. Change innings to continue.</p>
                   )}
                 </div>
               </div>
@@ -721,13 +720,12 @@ function ScoringPage() {
                   thisOverEvents.map((e) => {
                     const isBoundary = e.totalRuns === 4 || e.totalRuns === 6;
                     return (
-                      <div 
-                        key={e._id} 
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${
-                          e.isWicket ? 'bg-[#f43f5e] text-white' : 
-                          isBoundary ? 'bg-[#4d8dff] text-white' : 
-                          'bg-[#2a2c30] text-[#d3d7de]'
-                        }`}
+                      <div
+                        key={e._id}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${e.isWicket ? 'bg-[#f43f5e] text-white' :
+                            isBoundary ? 'bg-[#4d8dff] text-white' :
+                              'bg-[#2a2c30] text-[#d3d7de]'
+                          }`}
                       >
                         {e.isWicket ? 'W' : e.totalRuns}
                       </div>
@@ -787,11 +785,10 @@ function ScoringPage() {
                       <div key={e._id} className="flex gap-3">
                         <div className="text-xs font-medium text-[#87909e] pt-1 shrink-0 w-8">{e.over}.{e.ball}</div>
                         <div className="shrink-0 pt-0.5">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                            e.isWicket ? 'bg-[#f43f5e] text-white' : 
-                            isBoundary ? 'bg-[#4d8dff] text-white' : 
-                            'bg-[#2a2c30] text-[#d3d7de]'
-                          }`}>
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${e.isWicket ? 'bg-[#f43f5e] text-white' :
+                              isBoundary ? 'bg-[#4d8dff] text-white' :
+                                'bg-[#2a2c30] text-[#d3d7de]'
+                            }`}>
                             {e.isWicket ? 'W' : e.totalRuns}
                           </div>
                         </div>
