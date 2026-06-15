@@ -246,6 +246,7 @@ class ScoreService extends ScaffoldService {
       scores,
       recentEvents,
       stats: this.calculateScoreStats(match, scores, events),
+      fallOfWickets: this.calculateFallOfWickets(events),
     };
   }
 
@@ -341,6 +342,68 @@ class ScoreService extends ScaffoldService {
         bowling: Array.from(bowling.values()),
       };
     });
+  }
+
+  calculateFallOfWickets(events = []) {
+    const fallOfWickets = [];
+    const inningsState = new Map();
+
+    events.forEach((event) => {
+      const innings = Number(event.innings);
+      
+      if (!inningsState.has(innings)) {
+        inningsState.set(innings, { runs: 0, wickets: 0 });
+      }
+
+      const state = inningsState.get(innings);
+      state.runs += Number(event.runs || 0) + (['WIDE', 'NO_BALL'].includes(event.extraType) ? Number(event.extras || 0) : 0) + (['BYE', 'LEG_BYE'].includes(event.extraType) ? Number(event.extras || 0) : 0);
+
+      if (event.isWicket) {
+        state.wickets += 1;
+        fallOfWickets.push({
+          innings: innings,
+          over: `${event.over}.${event.ball}`,
+          player: event.dismissedPlayer?.name,
+          runs: event.batterRuns || 0, // This is runs scored by that batter in this ball, not total. The prompt requires batter's total runs. Wait, I'll fix this below.
+          balls: 0, 
+          score: state.runs,
+          wickets: state.wickets,
+          dismissal: event.wicketType,
+          isLast: state.wickets === 10
+        });
+      }
+    });
+
+    // To get the dismissed player's runs and balls accurately, we must accumulate them per player.
+    const fowFinal = [];
+    const playerStats = new Map();
+
+    events.forEach((event) => {
+      const strikerId = this.getPlayerId(event.striker);
+      if (!playerStats.has(strikerId)) {
+        playerStats.set(strikerId, { runs: 0, balls: 0 });
+      }
+
+      const stat = playerStats.get(strikerId);
+      stat.runs += Number(event.batterRuns || event.runs || 0);
+      if (event.isLegalBall) stat.balls += 1;
+
+      if (event.isWicket) {
+        const dismissedId = this.getPlayerId(event.dismissedPlayer);
+        // Sometimes the dismissed player is the non-striker
+        const dismissedStat = playerStats.get(dismissedId) || { runs: 0, balls: 0 };
+        
+        // Find the corresponding FOW we pushed earlier
+        const fowEntry = fallOfWickets.find(f => f.player === event.dismissedPlayer?.name && f.over === `${event.over}.${event.ball}`);
+        if (fowEntry) {
+          fowEntry.runs = dismissedStat.runs;
+          fowEntry.balls = dismissedStat.balls;
+          fowFinal.push(fowEntry);
+        }
+      }
+    });
+
+    return fowFinal;
   }
 
   async addBall(matchId, data, requester = null) {

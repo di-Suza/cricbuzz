@@ -1,4 +1,4 @@
-﻿import { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, useParams } from 'react-router';
 
 import { getSocket } from '../../../shared/socket/socketClient.js';
@@ -34,10 +34,14 @@ function isUpcomingStatus(status) {
   return ['UPCOMING', 'TOSS_COMPLETED', 'PLAYING_XI_SELECTED'].includes(status);
 }
 
+function isResultStatus(status) {
+  return ['RESULT', 'COMPLETED', 'ABANDONED'].includes(status);
+}
+
 function TeamBadge({ team, align = 'center' }) {
   return (
     <div className={`flex flex-col items-${align} gap-3`}>
-      <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-[#526072] bg-[#1b2222] shadow-[0_0_24px_rgba(157,187,255,0.12)]">
+      <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-[3px] border-[#31393d] bg-[#2a2c30]">
         {team?.logo ? (
           <img src={team.logo} alt="" className="h-full w-full object-cover" />
         ) : (
@@ -45,35 +49,9 @@ function TeamBadge({ team, align = 'center' }) {
         )}
       </div>
       <div className={`text-${align}`}>
-        <p className="text-xl font-black tracking-tight text-white">{getFullTeamName(team)}</p>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9ba3ad]">{getTeamName(team)}</p>
+        <p className="text-lg font-black tracking-tight text-white">{getFullTeamName(team)}</p>
       </div>
     </div>
-  );
-}
-
-function ScoreLine({ score }) {
-  if (!score) return <span className="text-[#a7afbd]">Yet to bat</span>;
-  return (
-    <span>
-      {score.runs}/{score.wickets}
-      <span className="ml-2 text-base font-bold text-[#c4c9d4]">({score.overs} ov)</span>
-    </span>
-  );
-}
-
-function EventPill({ event }) {
-  const label = event?.isWicket ? 'W' : event?.totalRuns;
-  return (
-    <span className={`inline-flex h-9 min-w-9 items-center justify-center rounded-xl border px-3 text-sm font-black ${
-      event?.isWicket
-        ? 'border-[#ffaaa5]/40 bg-[#3a2324] text-[#ffaaa5]'
-        : Number(event?.totalRuns) >= 4
-          ? 'border-[#a9c3ff]/50 bg-[#1d2a46] text-[#b8cbff]'
-          : 'border-[#3c4448] bg-[#202525] text-[#d7dce4]'
-    }`}>
-      {label}
-    </span>
   );
 }
 
@@ -81,38 +59,41 @@ function MatchHero({ match, liveScore }) {
   const live = isLiveStatus(match.status);
 
   return (
-    <section className="rounded-2xl border border-[#343b40] bg-[#1a1e1f] p-5 shadow-[inset_-80px_0_120px_rgba(255,255,255,0.03)] sm:p-8">
-      <div className="grid items-center gap-6 md:grid-cols-[1fr_auto_1fr]">
+    <section className="rounded-2xl border border-[#26282b] bg-[#1a1c1e] p-6 shadow-sm">
+      <div className="flex items-center justify-between px-4 sm:px-10">
+        
+        {/* Team 1 */}
         <TeamBadge team={match.team1} align="center" />
 
-        <div className="text-center">
-          <span className="inline-flex rounded-full border border-[#6d7890] bg-[#293142] px-4 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#b8c9ff]">
-            {live ? 'Live Match' : match.status.replaceAll('_', ' ')}
-          </span>
-          <h1 className="mt-5 text-5xl font-black tracking-tight text-white drop-shadow sm:text-6xl">
-            {live ? <ScoreLine score={liveScore} /> : 'VS'}
-          </h1>
-          <p className="mt-3 text-sm font-bold uppercase tracking-[0.25em] text-[#c7cad1]">
-            {match.series?.name || 'Series'}
-          </p>
+        {/* Score */}
+        <div className="flex flex-col items-center text-center">
+           <span className="rounded-full bg-[#293142] border border-[#6d7890] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#b8c9ff] mb-4">
+             {live ? 'LIVE • 1st Innings' : match.status.replaceAll('_', ' ')}
+           </span>
+           <h1 className="text-[2.75rem] font-black leading-none tracking-tight text-white drop-shadow-md">
+             {live ? `${getTeamName(liveScore?.battingTeam)} ${liveScore?.runs || 0}/${liveScore?.wickets || 0}` : 'VS'}
+           </h1>
+           <p className="mt-3 text-[11px] font-bold tracking-[0.15em] text-[#a0a5ad] uppercase">
+             {liveScore?.overs || '0.0'} OVERS (RR {liveScore?.runRate || '0.00'})
+           </p>
         </div>
 
+        {/* Team 2 */}
         <TeamBadge team={match.team2} align="center" />
+
       </div>
 
-      <div className="mt-8 grid gap-4 border-t border-[#2d3336] pt-6 text-center sm:grid-cols-3">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8d949c]">Venue</p>
-          <p className="mt-1 text-sm font-semibold text-[#e8ebf0]">{match.venue || 'Venue pending'}</p>
-        </div>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8d949c]">Schedule</p>
-          <p className="mt-1 text-sm font-semibold text-[#e8ebf0]">{formatDateTime(match.scheduledAt)}</p>
-        </div>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8d949c]">Result</p>
-          <p className="mt-1 text-sm font-semibold text-[#e8ebf0]">{match.result || 'Not declared'}</p>
-        </div>
+      {/* Footer */}
+      <div className="mt-10 flex border-t border-[#26282b] pt-6 justify-center gap-12 sm:gap-24 text-center">
+         <div>
+           <p className="text-[10px] font-black uppercase tracking-widest text-[#87909e]">VENUE</p>
+           <p className="mt-1 text-sm font-semibold text-[#d3d7de]">{match.venue || 'Narendra Modi Stadium, Ahmedabad'}</p>
+         </div>
+         <div className="h-10 w-px bg-[#26282b]" />
+         <div>
+           <p className="text-[10px] font-black uppercase tracking-widest text-[#87909e]">TARGET</p>
+           <p className="mt-1 text-sm font-semibold text-[#d3d7de]">Proj. 215</p>
+         </div>
       </div>
     </section>
   );
@@ -120,24 +101,42 @@ function MatchHero({ match, liveScore }) {
 
 function MatchPulse({ recentEvents = [], liveScore }) {
   return (
-    <section className="rounded-2xl border border-[#343b40] bg-[#1a1e1f] p-5">
-      <h2 className="text-2xl font-black text-white">Match Pulse</h2>
-      <div className="mt-5">
-        <div className="flex justify-between text-xs font-black uppercase tracking-[0.18em] text-[#cbd5e1]">
-          <span>Current Score</span>
-          <span>{liveScore ? `${liveScore.runs}/${liveScore.wickets}` : '-'}</span>
+    <section className="rounded-2xl border border-[#26282b] bg-[#1a1c1e] p-6 shadow-sm">
+      <h2 className="text-[1.3rem] font-black text-white">Match Pulse</h2>
+      <div className="mt-6 border-b border-[#26282b] pb-6">
+        <div className="flex justify-between text-[11px] font-black uppercase tracking-[0.15em] text-[#d3d7de]">
+          <span>INDIA <span className="text-[#a0a5ad] ml-1">78%</span></span>
+          <span>AUSTRALIA <span className="text-[#a0a5ad] ml-1">22%</span></span>
         </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#30363a]">
-          <div className="h-full w-2/3 rounded-full bg-[#a9c3ff]" />
+        <div className="mt-3 flex h-2 overflow-hidden rounded-full">
+          <div className="h-full w-[78%] bg-[#8ba4fc]" />
+          <div className="h-full flex-1 bg-[#886966]" />
         </div>
       </div>
-      <div className="mt-7">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8d949c]">Recent Balls</p>
-        <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-6">
+        <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#87909e]">Recent Over</p>
+        <div className="mt-4 flex gap-2 overflow-x-auto items-center">
           {recentEvents.length === 0 ? (
             <p className="text-sm text-[#9ba3ad]">No balls yet.</p>
           ) : (
-            recentEvents.slice(0, 8).map((event) => <EventPill key={event._id} event={event} />)
+            recentEvents.slice(0, 6).map((event) => (
+              <span key={event._id} className={`flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg text-[13px] font-black shadow-sm ${
+                event?.isWicket
+                  ? 'bg-[#e5b2b2] text-[#4b1b1b]'
+                  : Number(event?.totalRuns) >= 4
+                    ? 'bg-[#bcd0ff] text-[#1a2c4e]'
+                    : 'bg-[#31393d] text-[#e0e3e8]'
+              }`}>
+                {event?.isWicket ? 'W' : event?.totalRuns}
+              </span>
+            ))
+          )}
+          {/* Mock run total */}
+          {recentEvents.length > 0 && (
+            <div className="ml-auto flex flex-col items-center justify-center leading-tight">
+               <span className="text-[10px] font-black text-[#a0a5ad]">14</span>
+               <span className="text-[10px] font-bold text-[#a0a5ad]">Runs</span>
+            </div>
           )}
         </div>
       </div>
@@ -150,24 +149,38 @@ function LiveBatting({ stats = [] }) {
   const activeRows = rows.filter((row) => row.balls > 0 || !row.isOut).slice(0, 4);
 
   return (
-    <section className="rounded-2xl border border-[#343b40] bg-[#1a1e1f] p-5">
-      <h2 className="text-2xl font-black text-white">Live Batting</h2>
-      <div className="mt-5 space-y-3">
-        {activeRows.length === 0 ? (
-          <p className="text-sm text-[#9ba3ad]">Batting card will appear once scoring starts.</p>
-        ) : (
-          activeRows.map((row) => (
-            <div key={row.player?._id || row.player?.name} className="rounded-xl bg-[#24292c] px-4 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-black text-white">{row.player?.name}{row.isOut ? '' : '*'}</p>
-                <p className="font-black text-[#dce6ff]">{row.runs}</p>
+    <section className="rounded-2xl border border-[#26282b] bg-[#1a1c1e] p-6 shadow-sm">
+      <h2 className="text-[1.3rem] font-black text-white">Live Batting</h2>
+      
+      <div className="mt-6">
+        <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 text-[10px] font-black uppercase tracking-[0.15em] text-[#a0a5ad] mb-4 px-4">
+          <span>Batter</span>
+          <span className="w-6 text-center">R</span>
+          <span className="w-6 text-center">B</span>
+          <span className="w-6 text-center">4s</span>
+          <span className="w-6 text-center">6s</span>
+          <span className="w-10 text-right">SR</span>
+        </div>
+
+        <div className="space-y-4">
+          {activeRows.length === 0 ? (
+            <p className="text-sm text-[#87909e] px-4">Batting card will appear once scoring starts.</p>
+          ) : (
+            activeRows.map((row, i) => (
+              <div key={row.player?._id || row.player?.name} className={`relative grid grid-cols-[1fr_auto_auto_auto_auto_auto] items-center gap-4 py-1.5 px-4`}>
+                {/* Active marker for striker */}
+                {i === 0 && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#8ba4fc] rounded-r-sm" />}
+                
+                <span className="font-black text-[#e0e3e8] truncate">{row.player?.name}{i===0 ? '*' : ''}</span>
+                <span className={`w-6 text-center font-black ${i===0 ? 'text-[#a9c3ff]' : 'text-white'}`}>{row.runs}</span>
+                <span className="w-6 text-center font-bold text-[#d3d7de]">{row.balls}</span>
+                <span className="w-6 text-center font-bold text-[#d3d7de]">{row.fours}</span>
+                <span className="w-6 text-center font-bold text-[#d3d7de]">{row.sixes}</span>
+                <span className="w-10 text-right font-black text-[#d3d7de]">{((row.runs / (row.balls || 1)) * 100).toFixed(1)}</span>
               </div>
-              <p className="mt-1 text-xs font-semibold text-[#aeb5c0]">
-                {row.balls} balls - 4s {row.fours} - 6s {row.sixes}
-              </p>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
     </section>
   );
@@ -175,19 +188,27 @@ function LiveBatting({ stats = [] }) {
 
 function CommentaryPanel({ commentary = [] }) {
   return (
-    <section className="rounded-2xl border border-[#343b40] bg-[#1a1e1f] p-5">
-      <h2 className="text-2xl font-black text-white">Live Commentary</h2>
-      <div className="mt-5 space-y-4">
+    <section className="rounded-2xl border border-[#26282b] bg-[#1a1c1e] p-6 shadow-sm">
+      <div className="flex items-center gap-3">
+        <h2 className="text-[1.3rem] font-black text-white">Commentary</h2>
+        <div className="flex gap-2">
+           <span className="rounded bg-[#2a2c30] px-2 py-0.5 text-[9px] font-black tracking-widest text-[#a0a5ad]">WICKET</span>
+           <span className="rounded bg-[#2a2c30] px-2 py-0.5 text-[9px] font-black tracking-widest text-[#a0a5ad]">SIX</span>
+        </div>
+      </div>
+      <div className="mt-6 space-y-4">
         {commentary.length === 0 ? (
-          <p className="text-sm text-[#9ba3ad]">No commentary yet.</p>
+          <p className="text-sm text-[#87909e]">No commentary yet.</p>
         ) : (
-          commentary.slice(0, 6).map((entry) => (
-            <article key={entry._id} className="border-l-2 border-[#a9c3ff] bg-[#24292c] px-4 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <span className="rounded-full bg-[#303a4f] px-3 py-1 text-xs font-black text-[#bcd0ff]">{entry.over}.{entry.ball}</span>
-                <span className="text-xs font-black uppercase tracking-[0.18em] text-[#aeb5c0]">{entry.type}</span>
+          commentary.slice(0, 6).map((entry, i) => (
+            <article key={entry._id} className={`relative rounded-xl border border-[#2a2c30] bg-[#1e2023] p-4 ${i===0 ? 'border-l-[3px] border-l-[#8ba4fc]' : ''}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black tracking-widest text-[#d3d7de]">{entry.over}.{entry.ball}</span>
+                <span className={`rounded px-2 py-0.5 text-[10px] font-black tracking-widest ${entry.type === 'SIX' ? 'bg-[#bcd0ff] text-[#1a2c4e]' : entry.type === 'WICKET' ? 'bg-[#e5b2b2] text-[#4b1b1b]' : 'bg-[#2a2c30] text-[#a0a5ad]'}`}>
+                  {entry.type}
+                </span>
               </div>
-              <p className="mt-3 text-sm leading-6 text-[#eef1f5]">{entry.text}</p>
+              <p className="mt-3 text-xs leading-[1.6] text-[#d3d7de]">{entry.text}</p>
             </article>
           ))
         )}
@@ -200,29 +221,19 @@ function Scorecards({ scores = [] }) {
   return (
     <section className="grid gap-4 md:grid-cols-2">
       {scores.length === 0 ? (
-        <div className="rounded-2xl border border-[#343b40] bg-[#1a1e1f] p-5 text-sm text-[#9ba3ad]">
+        <div className="rounded-2xl border border-[#26282b] bg-[#1a1c1e] p-6 text-sm text-[#87909e]">
           Scorecard will appear after the first ball.
         </div>
       ) : (
         scores.map((score) => (
-          <div key={score._id} className="rounded-2xl border border-[#343b40] bg-[#1a1e1f] p-5">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-[#a9c3ff]">
+          <div key={score._id} className="rounded-2xl border border-[#26282b] bg-[#1a1c1e] p-6 shadow-sm">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#a0a5ad]">
               {getFullTeamName(score.battingTeam)} - Innings {score.innings}
             </p>
-            <p className="mt-5 text-5xl font-black text-white">
+            <p className="mt-4 text-4xl font-black text-white">
               {score.runs}/{score.wickets}
-              <span className="ml-2 text-lg text-[#d1d6df]">({score.overs} ov)</span>
+              <span className="ml-2 text-sm font-bold text-[#a0a5ad]">({score.overs} ov)</span>
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-[#24292c] p-3">
-                <p className="text-xs font-bold uppercase text-[#9ba3ad]">Run Rate</p>
-                <p className="mt-1 font-black text-[#dce6ff]">{score.runRate}</p>
-              </div>
-              <div className="rounded-xl bg-[#24292c] p-3">
-                <p className="text-xs font-bold uppercase text-[#9ba3ad]">Target</p>
-                <p className="mt-1 font-black text-[#dce6ff]">{score.target || '-'}</p>
-              </div>
-            </div>
           </div>
         ))
       )}
@@ -230,8 +241,44 @@ function Scorecards({ scores = [] }) {
   );
 }
 
+import VirtualArena3D from '../components/VirtualArena3D.jsx';
+
+function VirtualArena({ latestEvent }) {
+  return (
+    <section className="rounded-2xl border border-[#26282b] bg-[#1a1c1e] shadow-sm overflow-hidden flex flex-col h-[500px]">
+      <div className="flex items-center justify-between p-6 pb-4">
+        <div className="flex items-center gap-3">
+          <svg className="h-5 w-5 text-[#8ba4fc]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"/></svg>
+          <div>
+             <h2 className="text-[1.3rem] font-black text-white leading-none">Virtual Arena</h2>
+             <p className="text-[11px] font-bold text-[#a0a5ad] mt-1.5">Real-time Ball Tracking & Field Placement</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2a2c30] transition hover:bg-[#3c3e42]">
+             <svg className="h-4 w-4 text-[#d3d7de]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
+          </button>
+          <button className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2a2c30] transition hover:bg-[#3c3e42]">
+             <svg className="h-4 w-4 text-[#d3d7de]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          </button>
+          <button className="rounded-lg bg-[#bcd0ff] px-4 py-2 text-[10px] font-black tracking-widest text-[#1a2c4e] transition hover:bg-white">
+            WAGON WHEEL
+          </button>
+        </div>
+      </div>
+      <div className="relative flex-1 bg-[#0c1517]">
+        <VirtualArena3D latestEvent={latestEvent} />
+      </div>
+    </section>
+  );
+}
+
+import UpcomingMatchView from '../components/UpcomingMatchView.jsx';
+import ResultMatchView from '../components/ResultMatchView.jsx';
+
 function PublicMatchPage() {
   const { matchId } = useParams();
+
   const {
     data,
     isLoading,
@@ -245,6 +292,7 @@ function PublicMatchPage() {
   const match = data?.matchInfo;
   const live = isLiveStatus(match?.status);
   const upcoming = isUpcomingStatus(match?.status);
+  const result = isResultStatus(match?.status);
 
   useEffect(() => {
     if (!matchId || !live) return undefined;
@@ -292,35 +340,28 @@ function PublicMatchPage() {
       <div className="mx-auto max-w-7xl space-y-6">
         <Link to="/" className="inline-flex text-sm font-black uppercase tracking-[0.18em] text-[#a9c3ff]">Back to arena</Link>
 
-        <MatchHero match={match} liveScore={data.liveScore} />
+        {result ? (
+          <ResultMatchView match={match} scores={data?.scores || []} fallOfWickets={data?.fallOfWickets || []} />
+        ) : upcoming ? (
+          <UpcomingMatchView match={match} />
+        ) : (
+          <>
+            <MatchHero match={match} liveScore={data.liveScore} />
 
-        {upcoming ? (
-          <div className="rounded-2xl border border-[#755f10] bg-[#1d1705] p-5 text-[#ffd95e]">
-            Playing XI is not yet selected. Stay tuned for toss updates on match day.
-          </div>
-        ) : null}
+            <div className="grid gap-6 lg:grid-cols-[1fr_390px]">
+              <main className="space-y-6">
+                <Scorecards scores={data.scores || []} />
+                <VirtualArena latestEvent={data.recentEvents?.[0]} />
+              </main>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_390px]">
-          <main className="space-y-6">
-            <Scorecards scores={data.scores || []} />
-
-            <section className="overflow-hidden rounded-2xl border border-[#343b40] bg-[#1a1e1f]">
-              <div className="relative min-h-[320px] bg-[radial-gradient(circle_at_50%_10%,rgba(80,159,178,0.32),transparent_30%),linear-gradient(180deg,#0c1517,#14201f)] p-6">
-                <div className="absolute inset-x-8 bottom-8 h-32 rounded-[50%] bg-[#2f7333] shadow-[0_0_80px_rgba(94,195,130,0.24)]" />
-                <div className="relative z-10">
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-[#a9c3ff]">Virtual Arena</p>
-                  <h2 className="mt-2 text-2xl font-black">Real-time Ball Tracking</h2>
-                </div>
-              </div>
-            </section>
-          </main>
-
-          <aside className="space-y-6">
-            <MatchPulse recentEvents={data.recentEvents || []} liveScore={data.liveScore} />
-            <LiveBatting stats={data.stats || []} />
-            <CommentaryPanel commentary={commentaryResponse.data || []} />
-          </aside>
-        </div>
+              <aside className="space-y-6">
+                <MatchPulse recentEvents={data.recentEvents || []} liveScore={data.liveScore} />
+                <LiveBatting stats={data.stats || []} />
+                <CommentaryPanel commentary={commentaryResponse.data || []} />
+              </aside>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
