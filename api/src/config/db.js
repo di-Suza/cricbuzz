@@ -30,10 +30,13 @@ class Database {
   }
 }
 
-const database = new Database();
 
-const connectDB = database.connect.bind(database);
+
+
+const database = new Database();
 const disconnectDB = database.disconnect.bind(database);
+const connectDB = database.connect.bind(database);
+
 
 export { connectDB, Database, disconnectDB };
 export default database;

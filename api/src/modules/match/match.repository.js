@@ -75,10 +75,6 @@ class MatchRepository extends ScaffoldRepository {
     };
   }
 
-  findById(id) {
-    return this.populateQuery(this.model.findOne({ _id: id, isDeleted: false }));
-  }
-
   findSeriesById(id) {
     return this.seriesModel
       .findOne({ _id: id, isDeleted: false })
@@ -88,6 +84,12 @@ class MatchRepository extends ScaffoldRepository {
         select: 'name shortName logo primaryColor squadPlayers status',
       });
   }
+
+  
+  findById(id) {
+    return this.populateQuery(this.model.findOne({ _id: id, isDeleted: false }));
+  }
+
 
   countSeriesMatches(seriesId) {
     return this.model.countDocuments({
