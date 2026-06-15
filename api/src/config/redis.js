@@ -15,7 +15,16 @@ class RedisConnection {
   }
 
   createClient() {
-    const client = createClient({ url: env.REDIS_URL });
+    const client = createClient({
+      url: env.REDIS_URL,
+      socket: {
+        connectTimeout: 5000,
+        reconnectStrategy: (retries) => {
+          if (retries > 3) return new Error('Redis connection retry limit exceeded');
+          return Math.min(retries * 100, 3000);
+        }
+      }
+    });
 
     client.on('error', (error) => {
       logger.warn({ error }, 'Redis client error');

@@ -174,9 +174,9 @@ function HomePage() {
             </div>
           ) : (
             <>
-              {liveMatches.slice(0, 3).map((match) => <MatchCard key={match._id} match={match} tone="live" />)}
-              {upcomingMatches.slice(0, 3).map((match) => <MatchCard key={match._id} match={match} tone="upcoming" />)}
-              {recentMatches.slice(0, 3).map((match) => <MatchCard key={match._id} match={match} tone="result" />)}
+              {liveMatches.map((match) => <MatchCard key={match._id} match={match} tone="live" />)}
+              {upcomingMatches.map((match) => <MatchCard key={match._id} match={match} tone="upcoming" />)}
+              {recentMatches.map((match) => <MatchCard key={match._id} match={match} tone="result" />)}
             </>
           )}
         </div>
