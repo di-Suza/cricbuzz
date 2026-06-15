@@ -48,8 +48,12 @@ function PlayerForm({ isOpen, onClose, player }) {
     formData.append('name', name);
     formData.append('role', role);
     formData.append('country', country);
-    if (battingStyle) formData.append('battingStyle', battingStyle);
-    if (bowlingStyle) formData.append('bowlingStyle', bowlingStyle);
+    if (role === 'BATSMAN' && battingStyle) {
+      formData.append('battingStyle', battingStyle);
+    }
+    if (role === 'BOWLER' && bowlingStyle) {
+      formData.append('bowlingStyle', bowlingStyle);
+    }
     if (imageFile) formData.append('image', imageFile);
 
     try {
@@ -108,37 +112,42 @@ function PlayerForm({ isOpen, onClose, player }) {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Batting Style</label>
-            <select
-              required
-              value={battingStyle}
-              onChange={(e) => setBattingStyle(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-emerald-500 sm:text-sm"
-            >
-              <option value="">Select batting style</option>
-              {PLAYER_BATTING_STYLE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Bowling Style</label>
-            <select
-              value={bowlingStyle}
-              onChange={(e) => setBowlingStyle(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-emerald-500 sm:text-sm"
-            >
-              <option value="">Select bowling style</option>
-              {PLAYER_BOWLING_STYLE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          {role === 'BATSMAN' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Batting Style</label>
+              <select
+                required
+                value={battingStyle}
+                onChange={(e) => setBattingStyle(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-emerald-500 sm:text-sm"
+              >
+                <option value="">Select batting style</option>
+                {PLAYER_BATTING_STYLE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {role === 'BOWLER' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Bowling Style</label>
+              <select
+                required
+                value={bowlingStyle}
+                onChange={(e) => setBowlingStyle(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-emerald-500 sm:text-sm"
+              >
+                <option value="">Select bowling style</option>
+                {PLAYER_BOWLING_STYLE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div>

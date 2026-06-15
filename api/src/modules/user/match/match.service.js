@@ -15,8 +15,8 @@ class MatchPublicService {
   populateMatch(query) {
     return query
       .populate('series', 'name season matchType status')
-      .populate('team1', 'name shortName logo primaryColor')
-      .populate('team2', 'name shortName logo primaryColor')
+      .populate({ path: 'team1', select: 'name shortName logo primaryColor squadPlayers', populate: { path: 'squadPlayers', select: 'name role country image' } })
+      .populate({ path: 'team2', select: 'name shortName logo primaryColor squadPlayers', populate: { path: 'squadPlayers', select: 'name role country image' } })
       .populate('tossWinner', 'name shortName logo primaryColor')
       .populate('winner', 'name shortName logo primaryColor')
       .populate('playingXI.team1.player', 'name role country image')
