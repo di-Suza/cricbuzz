@@ -33,6 +33,24 @@ const protectedRoutes = [
     element: <UsersPage />,
     nav: true,
   },
+    {
+    id: 'teams',
+    path: 'teams',
+    label: 'Teams',
+    module: 'Team CRUD',
+    roles: CONTENT_ROLES,
+    element: <TeamsPage />,
+    nav: true,
+  },
+   {
+    id: 'squads',
+    path: 'squads',
+    label: 'Squads',
+    module: 'Squad Management',
+    roles: CONTENT_ROLES,
+    element: <SquadsPage />,
+    nav: true,
+  },
   {
     id: 'players',
     path: 'players',
@@ -42,24 +60,8 @@ const protectedRoutes = [
     element: <PlayersPage />,
     nav: true,
   },
-  {
-    id: 'teams',
-    path: 'teams',
-    label: 'Teams',
-    module: 'Team CRUD',
-    roles: CONTENT_ROLES,
-    element: <TeamsPage />,
-    nav: true,
-  },
-  {
-    id: 'squads',
-    path: 'squads',
-    label: 'Squads',
-    module: 'Squad Management',
-    roles: CONTENT_ROLES,
-    element: <SquadsPage />,
-    nav: true,
-  },
+
+ 
   {
     id: 'series',
     path: 'series',
