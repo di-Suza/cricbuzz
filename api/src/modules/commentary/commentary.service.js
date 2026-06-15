@@ -1,7 +1,6 @@
 import { MatchStatus } from '../../shared/constants/matchStatus.js';
 import { BadRequestError, ConflictError, NotFoundError } from '../../shared/errors/index.js';
 import { emitPublic, emitToMatch } from '../../sockets/socketGateway.js';
-import logger from '../../config/logger.js';
 import { responseCache } from '../user/cache/responseCache.js';
 import { ScaffoldService } from '../../shared/utils/moduleScaffold.js';
 import commentaryRepository from './commentary.repository.js';
@@ -80,10 +79,12 @@ class CommentaryService extends ScaffoldService {
       ...(this.getUserId(requester) ? { createdBy: this.getUserId(requester) } : {}),
     });
 
-    await this.notifyCommentaryUpdate(matchId, 'commentary.created', {
+    await responseCache.clear();
+    emitToMatch(matchId, 'commentary.created', {
       matchId: String(matchId),
       commentary,
     });
+    emitPublic('public.feed.updated', { matchId: String(matchId), reason: 'commentary.created' });
 
     return commentary;
   }
@@ -92,32 +93,14 @@ class CommentaryService extends ScaffoldService {
     const commentary = await this.repository.delete(id, this.getUserId(requester));
     if (!commentary) throw new NotFoundError('Commentary not found');
 
-    await this.notifyCommentaryUpdate(commentary.match, 'commentary.deleted', {
+    await responseCache.clear();
+    emitToMatch(commentary.match, 'commentary.deleted', {
       matchId: String(commentary.match),
       commentaryId: String(commentary._id),
     });
+    emitPublic('public.feed.updated', { matchId: String(commentary.match), reason: 'commentary.deleted' });
 
     return commentary;
-  }
-
-  async notifyCommentaryUpdate(matchId, event, payload) {
-    try {
-      await responseCache.clear();
-    } catch (error) {
-      logger.warn(`Public cache could not be cleared after commentary update: ${error.message}`);
-    }
-
-    try {
-      emitToMatch(matchId, event, payload);
-      emitPublic('public.feed.updated', {
-        matchId: String(matchId),
-        reason: event,
-        commentary: payload.commentary || null,
-        commentaryId: payload.commentaryId || null,
-      });
-    } catch (error) {
-      logger.warn(`Commentary socket update could not be delivered: ${error.message}`);
-    }
   }
 }
 
