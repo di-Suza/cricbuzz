@@ -67,16 +67,7 @@ class MatchPublicService {
     };
   }
 
-  async getMatch(matchId) {
-    const safeId = PublicQueryHelper.ensureId(matchId, 'Match');
-    const match = await this.populateMatch(Match.findOne({ _id: safeId, isDeleted: false }));
-    if (!match) throw new NotFoundError('Match not found');
-
-    const scores = await this.populateScore(Score.find({ match: safeId }).sort({ innings: 1 }));
-    return { match, scores };
-  }
-
-  async getMatchCenter(matchId) {
+   async getMatchCenter(matchId) {
     const scoreboard = await scoreService.getScoreboard(matchId);
     const { match, scores, recentEvents, stats } = scoreboard;
     const liveScore = scores[scores.length - 1] || null;
@@ -91,6 +82,17 @@ class MatchPublicService {
       result: match.status === MatchStatus.COMPLETED ? { winner: match.winner, result: match.result } : null,
     };
   }
+
+  async getMatch(matchId) {
+    const safeId = PublicQueryHelper.ensureId(matchId, 'Match');
+    const match = await this.populateMatch(Match.findOne({ _id: safeId, isDeleted: false }));
+    if (!match) throw new NotFoundError('Match not found');
+
+    const scores = await this.populateScore(Score.find({ match: safeId }).sort({ innings: 1 }));
+    return { match, scores };
+  }
+
+ 
 
   async getScorecard(matchId) {
     const { match, scores } = await this.getMatch(matchId);
