@@ -1,23 +1,28 @@
-import pinoHttp from 'pino-http';
-
 import logger from '../../config/logger.js';
 
-const requestLogger = pinoHttp({
-  logger,
-  autoLogging: {
-    ignore: (req) => req.url === '/health',
-  },
-  customLogLevel(_req, res, error) {
-    if (error || res.statusCode >= 500) return 'error';
-    if (res.statusCode >= 400) return 'warn';
-    return 'info';
-  },
-  customSuccessMessage(req, res) {
-    return `${req.method} ${req.url} completed with ${res.statusCode}`;
-  },
-  customErrorMessage(req, res) {
-    return `${req.method} ${req.url} failed with ${res.statusCode}`;
-  },
-});
+function requestLogger(req, res, next) {
+  if (req.originalUrl === '/health') return next();
+
+  const startedAt = Date.now();
+
+  res.on('finish', () => {
+    const durationMs = Date.now() - startedAt;
+    const message = `${req.method} ${req.originalUrl} -> ${res.statusCode} (${durationMs}ms)`;
+
+    if (res.statusCode >= 500) {
+      logger.error(message);
+      return;
+    }
+
+    if (res.statusCode >= 400) {
+      logger.warn(message);
+      return;
+    }
+
+    logger.info(message);
+  });
+
+  return next();
+}
 
 export default requestLogger;

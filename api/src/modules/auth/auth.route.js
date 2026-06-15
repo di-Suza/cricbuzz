@@ -1,6 +1,4 @@
 import express from 'express';
-
-import { authenticate } from '../../shared/middleware/auth.js';
 import validateRequest from '../../shared/middleware/validateRequest.js';
 import { authenticate, authorize } from '../../shared/middleware/auth.js';
 import { ADMIN, SUPER_ADMIN } from '../../shared/constants/roles.js';

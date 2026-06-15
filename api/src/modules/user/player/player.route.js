@@ -1,9 +1,22 @@
-import { ScaffoldRoutes } from '../../../shared/utils/moduleScaffold.js';
+import express from 'express';
+
+import validateRequest from '../../../shared/middleware/validateRequest.js';
+import { idParamRules, playerListRules } from '../../player/validators/player.validator.js';
 import playerController from './player.controller.js';
 
-class PlayerPublicRoutes extends ScaffoldRoutes {
+class PlayerPublicRoutes {
   constructor() {
-    super(playerController);
+    this.router = express.Router();
+    this.register();
+  }
+
+  register() {
+    this.router.get('/', validateRequest(playerListRules), playerController.getAll);
+    this.router.get('/:id', validateRequest(idParamRules), playerController.getById);
+  }
+
+  getRouter() {
+    return this.router;
   }
 }
 

@@ -1,5 +1,3 @@
-class MatchModelReference {
-  static collection = 'matches';
-}
+import { SeriesMatch } from '../series/series.model.js';
 
-export default MatchModelReference;
+export default SeriesMatch;

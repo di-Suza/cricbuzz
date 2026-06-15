@@ -1,9 +1,15 @@
-import { ScaffoldController } from '../../../shared/utils/moduleScaffold.js';
+import asyncHandler from '../../../shared/utils/asyncHandler.js';
 import pointsTableService from './pointsTable.service.js';
 
-class PointsTablePublicController extends ScaffoldController {
+class PointsTablePublicController {
   constructor(service = pointsTableService) {
-    super(service);
+    this.service = service;
+    this.getBySeries = asyncHandler(this.getBySeries.bind(this));
+  }
+
+  async getBySeries(req, res) {
+    const data = await this.service.getPointsTable(req.params.seriesId);
+    res.json({ success: true, data });
   }
 }
 

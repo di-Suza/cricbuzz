@@ -35,12 +35,19 @@ class SocketGateway {
     this.io.to(this.roomName(matchId)).emit(event, payload);
     return true;
   }
+
+  emitPublic(event, payload) {
+    if (!this.io || !event) return false;
+    this.io.emit(event, payload);
+    return true;
+  }
 }
 
 const socketGateway = new SocketGateway();
 
 const initSocket = socketGateway.init.bind(socketGateway);
 const emitToMatch = socketGateway.emitToMatch.bind(socketGateway);
+const emitPublic = socketGateway.emitPublic.bind(socketGateway);
 
-export { emitToMatch, initSocket, SocketGateway };
+export { emitPublic, emitToMatch, initSocket, SocketGateway };
 export default socketGateway;

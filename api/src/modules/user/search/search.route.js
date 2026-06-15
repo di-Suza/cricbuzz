@@ -1,9 +1,18 @@
-import { ScaffoldRoutes } from '../../../shared/utils/moduleScaffold.js';
+import express from 'express';
 import searchController from './search.controller.js';
 
-class SearchPublicRoutes extends ScaffoldRoutes {
+class SearchPublicRoutes {
   constructor() {
-    super(searchController);
+    this.router = express.Router();
+    this.register();
+  }
+
+  register() {
+    this.router.get('/', searchController.search);
+  }
+
+  getRouter() {
+    return this.router;
   }
 }
 

@@ -1,6 +1,6 @@
 const seriesFields = Object.freeze({
-  required: ['name', 'shortName', 'season'],
-  optional: ['status', 'logo', 'createdBy', 'updatedBy', 'isDeleted'],
+  required: ['name', 'season', 'startDate', 'endDate', 'format', 'matchType', 'numberOfMatches'],
+  optional: ['status', 'teams', 'createdBy', 'updatedBy', 'isDeleted'],
 });
 
 export default seriesFields;

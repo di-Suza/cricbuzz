@@ -1,9 +1,15 @@
-import { ScaffoldController } from '../../../shared/utils/moduleScaffold.js';
+import asyncHandler from '../../../shared/utils/asyncHandler.js';
 import searchService from './search.service.js';
 
-class SearchPublicController extends ScaffoldController {
+class SearchPublicController {
   constructor(service = searchService) {
-    super(service);
+    this.service = service;
+    this.search = asyncHandler(this.search.bind(this));
+  }
+
+  async search(req, res) {
+    const data = await this.service.search(req.query);
+    res.json({ success: true, data });
   }
 }
 

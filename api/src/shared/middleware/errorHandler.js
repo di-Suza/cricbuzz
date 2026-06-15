@@ -1,3 +1,5 @@
+import logger from '../../config/logger.js';
+
 class ErrorHandler {
   static normalize(error) {
     if (error.name === 'CastError') {
@@ -5,6 +7,14 @@ class ErrorHandler {
         statusCode: 400,
         message: 'Invalid resource id',
         details: null,
+      };
+    }
+
+    if (error.name === 'ValidationError') {
+      return {
+        statusCode: 400,
+        message: Object.values(error.errors).map(err => err.message).join(', ') || 'Validation Error',
+        details: error.errors,
       };
     }
 
@@ -23,11 +33,11 @@ class ErrorHandler {
     };
   }
 
-  static handle(error, _req, res, _next) {
+  static handle(error, req, res, _next) {
     const normalized = ErrorHandler.normalize(error);
 
     if (normalized.statusCode >= 500) {
-      console.error(error);
+      logger.error(`${req.method} ${req.originalUrl} failed: ${error.message || 'Unhandled application error'}`);
     }
 
     res.status(normalized.statusCode).json({
