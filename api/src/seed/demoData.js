@@ -13,16 +13,46 @@ import { MatchStatus } from '../shared/constants/matchStatus.js';
 import { Roles } from '../shared/constants/roles.js';
 
 const TEAM_BLUEPRINTS = Object.freeze([
-  { code: 'DIT', name: 'Demo India Titans', country: 'India', color: '#4d8dff', squadSize: 15 },
-  { code: 'DAR', name: 'Demo Australia Rangers', country: 'Australia', color: '#f9c74f', squadSize: 15 },
-  { code: 'DER', name: 'Demo England Royals', country: 'England', color: '#7c8cff', squadSize: 15 },
-  { code: 'DSK', name: 'Demo South Africa Kings', country: 'South Africa', color: '#43aa8b', squadSize: 15 },
-  { code: 'DNF', name: 'Demo New Zealand Falcons', country: 'New Zealand', color: '#adb5bd', squadSize: 14 },
-  { code: 'DPS', name: 'Demo Pakistan Stallions', country: 'Pakistan', color: '#52b788', squadSize: 14 },
-  { code: 'DSL', name: 'Demo Sri Lanka Lions', country: 'Sri Lanka', color: '#f8961e', squadSize: 14 },
-  { code: 'DBT', name: 'Demo Bangladesh Tigers', country: 'Bangladesh', color: '#ef476f', squadSize: 14 },
-  { code: 'DWB', name: 'Demo West Indies Blazers', country: 'West Indies', color: '#9d4edd', squadSize: 14 },
-  { code: 'DAA', name: 'Demo Afghanistan Aces', country: 'Afghanistan', color: '#00b4d8', squadSize: 14 },
+  { 
+    code: 'IND', name: 'India', country: 'India', color: '#0f4c81', squadSize: 15,
+    players: ['Rohit Sharma', 'Virat Kohli', 'Shubman Gill', 'Suryakumar Yadav', 'KL Rahul', 'Hardik Pandya', 'Ravindra Jadeja', 'Jasprit Bumrah', 'Mohammed Shami', 'Mohammed Siraj', 'Kuldeep Yadav', 'Rishabh Pant', 'Shreyas Iyer', 'Axar Patel', 'Arshdeep Singh']
+  },
+  { 
+    code: 'AUS', name: 'Australia', country: 'Australia', color: '#ffcd00', squadSize: 15,
+    players: ['Pat Cummins', 'David Warner', 'Travis Head', 'Steve Smith', 'Marnus Labuschagne', 'Glenn Maxwell', 'Mitchell Marsh', 'Cameron Green', 'Alex Carey', 'Mitchell Starc', 'Josh Hazlewood', 'Adam Zampa', 'Marcus Stoinis', 'Sean Abbott', 'Josh Inglis']
+  },
+  { 
+    code: 'ENG', name: 'England', country: 'England', color: '#002654', squadSize: 15,
+    players: ['Jos Buttler', 'Jonny Bairstow', 'Joe Root', 'Ben Stokes', 'Harry Brook', 'Liam Livingstone', 'Moeen Ali', 'Sam Curran', 'Chris Woakes', 'Adil Rashid', 'Mark Wood', 'Reece Topley', 'Dawid Malan', 'Jofra Archer', 'Phil Salt']
+  },
+  { 
+    code: 'RSA', name: 'South Africa', country: 'South Africa', color: '#007749', squadSize: 15,
+    players: ['Temba Bavuma', 'Quinton de Kock', 'Aiden Markram', 'Heinrich Klaasen', 'David Miller', 'Rassie van der Dussen', 'Marco Jansen', 'Kagiso Rabada', 'Anrich Nortje', 'Lungi Ngidi', 'Tabraiz Shamsi', 'Keshav Maharaj', 'Tristan Stubbs', 'Gerald Coetzee', 'Reeza Hendricks']
+  },
+  { 
+    code: 'NZ', name: 'New Zealand', country: 'New Zealand', color: '#000000', squadSize: 15,
+    players: ['Kane Williamson', 'Devon Conway', 'Rachin Ravindra', 'Daryl Mitchell', 'Tom Latham', 'Glenn Phillips', 'Mitchell Santner', 'Trent Boult', 'Tim Southee', 'Lockie Ferguson', 'Matt Henry', 'Ish Sodhi', 'Mark Chapman', 'Jimmy Neesham', 'Will Young']
+  },
+  { 
+    code: 'PAK', name: 'Pakistan', country: 'Pakistan', color: '#01411c', squadSize: 15,
+    players: ['Babar Azam', 'Mohammad Rizwan', 'Fakhar Zaman', 'Imam-ul-Haq', 'Iftikhar Ahmed', 'Shadab Khan', 'Mohammad Nawaz', 'Shaheen Afridi', 'Haris Rauf', 'Naseem Shah', 'Hasan Ali', 'Agha Salman', 'Usama Mir', 'Abdullah Shafique', 'Zaman Khan']
+  },
+  { 
+    code: 'SL', name: 'Sri Lanka', country: 'Sri Lanka', color: '#002573', squadSize: 15,
+    players: ['Dasun Shanaka', 'Kusal Mendis', 'Pathum Nissanka', 'Sadeera Samarawickrama', 'Charith Asalanka', 'Dhananjaya de Silva', 'Wanindu Hasaranga', 'Maheesh Theekshana', 'Matheesha Pathirana', 'Dilshan Madushanka', 'Dushmantha Chameera', 'Kasun Rajitha', 'Dimuth Karunaratne', 'Kusal Perera', 'Lahiru Kumara']
+  },
+  { 
+    code: 'BAN', name: 'Bangladesh', country: 'Bangladesh', color: '#006a4e', squadSize: 15,
+    players: ['Shakib Al Hasan', 'Litton Das', 'Najmul Hossain Shanto', 'Mushfiqur Rahim', 'Mahmudullah', 'Towhid Hridoy', 'Mehidy Hasan Miraz', 'Mustafizur Rahman', 'Taskin Ahmed', 'Shoriful Islam', 'Hasan Mahmud', 'Tanzim Hasan Sakib', 'Tanzid Hasan', 'Mahedi Hasan', 'Nasum Ahmed']
+  },
+  { 
+    code: 'WI', name: 'West Indies', country: 'West Indies', color: '#7b0041', squadSize: 15,
+    players: ['Rovman Powell', 'Shai Hope', 'Nicholas Pooran', 'Brandon King', 'Kyle Mayers', 'Shimron Hetmyer', 'Jason Holder', 'Andre Russell', 'Akeal Hosein', 'Alzarri Joseph', 'Romario Shepherd', 'Gudakesh Motie', 'Oshane Thomas', 'Johnson Charles', 'Keemo Paul']
+  },
+  { 
+    code: 'AFG', name: 'Afghanistan', country: 'Afghanistan', color: '#0000ff', squadSize: 15,
+    players: ['Hashmatullah Shahidi', 'Rahmanullah Gurbaz', 'Ibrahim Zadran', 'Rahmat Shah', 'Najibullah Zadran', 'Mohammad Nabi', 'Rashid Khan', 'Mujeeb Ur Rahman', 'Fazalhaq Farooqi', 'Naveen-ul-Haq', 'Azmatullah Omarzai', 'Noor Ahmad', 'Ikram Alikhil', 'Gulbadin Naib', 'Abdul Rahman']
+  },
 ]);
 
 const ROLE_PATTERN = Object.freeze([
@@ -298,7 +328,8 @@ class DemoDataSeeder {
       await Team.deleteMany({ _id: { $in: demoTeamIds } });
     }
 
-    await Player.deleteMany({ name: /^Demo / });
+    const demoCountries = TEAM_BLUEPRINTS.map((team) => team.country);
+    await Player.deleteMany({ country: { $in: demoCountries } });
   }
 
   async createPlayersAndTeams(createdBy = null) {
@@ -307,8 +338,10 @@ class DemoDataSeeder {
     TEAM_BLUEPRINTS.forEach((team, teamIndex) => {
       for (let index = 0; index < team.squadSize; index += 1) {
         const role = ROLE_PATTERN[index % ROLE_PATTERN.length];
+        const playerName = team.players && team.players[index] ? team.players[index] : `${team.country} Player ${String(index + 1).padStart(2, '0')}`;
+        
         playerDocs.push({
-          name: `Demo ${team.code} Player ${String(index + 1).padStart(2, '0')}`,
+          name: playerName,
           image: logoUrl(`${team.code}${index + 1}`, team.color),
           role,
           country: team.country,
@@ -365,7 +398,7 @@ class DemoDataSeeder {
         format: 'B',
         matchType: 'T20',
         numberOfMatches: 4,
-        teams: ['DIT', 'DAR', 'DER', 'DSK', 'DNF', 'DPS'],
+        teams: ['IND', 'AUS', 'ENG', 'RSA', 'NZ', 'PAK'],
       },
       {
         key: 'upcomingOdi',
@@ -377,7 +410,7 @@ class DemoDataSeeder {
         format: 'B',
         matchType: 'ODI',
         numberOfMatches: 4,
-        teams: ['DSL', 'DBT', 'DWB', 'DAA', 'DIT', 'DAR'],
+        teams: ['SL', 'BAN', 'WI', 'AFG', 'IND', 'AUS'],
       },
       {
         key: 'completedT20',
@@ -389,7 +422,7 @@ class DemoDataSeeder {
         format: 'C',
         matchType: 'T20',
         numberOfMatches: 4,
-        teams: ['DIT', 'DAR', 'DER', 'DSK', 'DNF', 'DPS', 'DSL', 'DBT', 'DWB', 'DAA'],
+        teams: ['IND', 'AUS', 'ENG', 'RSA', 'NZ', 'PAK', 'SL', 'BAN', 'WI', 'AFG'],
       },
     ];
 
@@ -500,129 +533,129 @@ class DemoDataSeeder {
     const matchPlans = [
       {
         series: series.liveT20,
-        team1: byCode.get('DIT'),
-        team2: byCode.get('DAR'),
+        team1: byCode.get('IND'),
+        team2: byCode.get('AUS'),
         status: MatchStatus.LIVE,
         scheduledAt: daysFromNow(0, 18, 30),
         venueIndex: 0,
-        tossWinner: byCode.get('DIT'),
+        tossWinner: byCode.get('IND'),
         tossDecision: 'BAT',
         includePlayingXi: true,
         score: { firstBalls: 104, firstWickets: 3, seed: 1 },
       },
       {
         series: series.liveT20,
-        team1: byCode.get('DER'),
-        team2: byCode.get('DSK'),
+        team1: byCode.get('ENG'),
+        team2: byCode.get('RSA'),
         status: MatchStatus.LIVE,
         scheduledAt: daysFromNow(0, 20, 0),
         venueIndex: 2,
-        tossWinner: byCode.get('DSK'),
+        tossWinner: byCode.get('RSA'),
         tossDecision: 'BOWL',
         includePlayingXi: true,
         score: { firstBalls: 120, firstWickets: 5, secondBalls: 58, secondWickets: 2, seed: 4 },
       },
       {
         series: series.liveT20,
-        team1: byCode.get('DNF'),
-        team2: byCode.get('DPS'),
+        team1: byCode.get('NZ'),
+        team2: byCode.get('PAK'),
         status: MatchStatus.INNINGS_BREAK,
         scheduledAt: daysFromNow(0, 16, 0),
         venueIndex: 4,
-        tossWinner: byCode.get('DPS'),
+        tossWinner: byCode.get('PAK'),
         tossDecision: 'BOWL',
         includePlayingXi: true,
         score: { firstBalls: 120, firstWickets: 6, seed: 7 },
       },
       {
         series: series.liveT20,
-        team1: byCode.get('DIT'),
-        team2: byCode.get('DER'),
+        team1: byCode.get('IND'),
+        team2: byCode.get('ENG'),
         status: MatchStatus.UPCOMING,
         scheduledAt: daysFromNow(1, 19, 30),
         venueIndex: 1,
       },
       {
         series: series.upcomingOdi,
-        team1: byCode.get('DSL'),
-        team2: byCode.get('DBT'),
+        team1: byCode.get('SL'),
+        team2: byCode.get('BAN'),
         status: MatchStatus.UPCOMING,
         scheduledAt: daysFromNow(3, 14, 0),
         venueIndex: 6,
       },
       {
         series: series.upcomingOdi,
-        team1: byCode.get('DWB'),
-        team2: byCode.get('DAA'),
+        team1: byCode.get('WI'),
+        team2: byCode.get('AFG'),
         status: MatchStatus.TOSS_COMPLETED,
         scheduledAt: daysFromNow(4, 14, 0),
         venueIndex: 7,
-        tossWinner: byCode.get('DAA'),
+        tossWinner: byCode.get('AFG'),
         tossDecision: 'BAT',
       },
       {
         series: series.upcomingOdi,
-        team1: byCode.get('DIT'),
-        team2: byCode.get('DSL'),
+        team1: byCode.get('IND'),
+        team2: byCode.get('SL'),
         status: MatchStatus.PLAYING_XI_SELECTED,
         scheduledAt: daysFromNow(5, 14, 0),
         venueIndex: 0,
-        tossWinner: byCode.get('DIT'),
+        tossWinner: byCode.get('IND'),
         tossDecision: 'BOWL',
         includePlayingXi: true,
       },
       {
         series: series.upcomingOdi,
-        team1: byCode.get('DAR'),
-        team2: byCode.get('DBT'),
+        team1: byCode.get('AUS'),
+        team2: byCode.get('BAN'),
         status: MatchStatus.UPCOMING,
         scheduledAt: daysFromNow(6, 14, 0),
         venueIndex: 1,
       },
       {
         series: series.completedT20,
-        team1: byCode.get('DIT'),
-        team2: byCode.get('DSK'),
+        team1: byCode.get('IND'),
+        team2: byCode.get('RSA'),
         status: MatchStatus.COMPLETED,
         scheduledAt: daysFromNow(-12, 19, 30),
         venueIndex: 0,
-        tossWinner: byCode.get('DIT'),
+        tossWinner: byCode.get('IND'),
         tossDecision: 'BAT',
         includePlayingXi: true,
         score: { firstBalls: 120, firstWickets: 6, secondBalls: 120, secondWickets: 8, seed: 2 },
       },
       {
         series: series.completedT20,
-        team1: byCode.get('DAR'),
-        team2: byCode.get('DER'),
+        team1: byCode.get('AUS'),
+        team2: byCode.get('ENG'),
         status: MatchStatus.COMPLETED,
         scheduledAt: daysFromNow(-10, 19, 30),
         venueIndex: 1,
-        tossWinner: byCode.get('DER'),
+        tossWinner: byCode.get('ENG'),
         tossDecision: 'BOWL',
         includePlayingXi: true,
         score: { firstBalls: 120, firstWickets: 4, secondBalls: 120, secondWickets: 5, seed: 5 },
       },
       {
         series: series.completedT20,
-        team1: byCode.get('DNF'),
-        team2: byCode.get('DPS'),
+        team1: byCode.get('NZ'),
+        team2: byCode.get('PAK'),
         status: MatchStatus.COMPLETED,
         scheduledAt: daysFromNow(-8, 18, 30),
         venueIndex: 4,
-        tossWinner: byCode.get('DNF'),
+        tossWinner: byCode.get('NZ'),
         tossDecision: 'BOWL',
         includePlayingXi: true,
         score: { firstBalls: 120, firstWickets: 7, secondBalls: 120, secondWickets: 6, seed: 8 },
       },
       {
         series: series.completedT20,
-        team1: byCode.get('DSL'),
-        team2: byCode.get('DAA'),
+        team1: byCode.get('SL'),
+        team2: byCode.get('AFG'),
         status: MatchStatus.COMPLETED,
         scheduledAt: daysFromNow(-6, 18, 30),
         venueIndex: 6,
-        tossWinner: byCode.get('DAA'),
+        tossWinner: byCode.get('AFG'),
         tossDecision: 'BAT',
         includePlayingXi: true,
         score: { firstBalls: 120, firstWickets: 5, secondBalls: 120, secondWickets: 9, seed: 11 },
