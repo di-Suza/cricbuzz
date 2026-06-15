@@ -107,42 +107,6 @@ function MatchCard({ match, tone = 'live' }) {
   );
 }
 
-function StoryCard() {
-  return (
-    <article className="overflow-hidden rounded-2xl border border-[#26282b] bg-[#1a1c1e]">
-      <div className="flex h-full flex-col">
-        <div className="relative h-64 bg-[#141517]">
-          {/* Mock YouTube player background */}
-          <img src="/stadium.png" alt="Video thumbnail" className="h-full w-full object-cover opacity-40" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1e2023]/80 backdrop-blur border border-[#3c3e42] transition hover:bg-[#26282b] cursor-pointer">
-              <svg className="h-5 w-5 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-1 flex-col justify-center bg-[#1a1c1e] p-8">
-          <div className="flex items-center gap-3">
-             <span className="rounded-full bg-[#2a2c30] px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white">Strategy</span>
-             <span className="text-[10px] font-bold text-[#87909e] uppercase tracking-widest">8 min read</span>
-          </div>
-          <h2 className="mt-5 text-4xl font-black leading-[1.1] text-white">The changing dynamics of the middle-over strategy</h2>
-          <p className="mt-4 text-sm leading-[1.7] text-[#a0a5ad]">
-            In modern T20 cricket, the traditional approach of 'saving wickets' for the death overs is quickly becoming obsolete. Teams are reshaping batting tempo with deeper squads, flexible all-rounders, and sharper matchup plans.
-          </p>
-          <div className="mt-8 flex items-center gap-4 border-t border-[#2a2c30] pt-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2a2c30] border border-[#3c3e42]">
-               <svg className="h-4 w-4 text-[#87909e]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-            </div>
-            <div>
-               <p className="text-xs font-bold text-white">Rahul Sharma</p>
-               <p className="text-[10px] font-semibold text-[#87909e] mt-0.5">Senior Analyst</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
 
 function HomePage() {
   const dispatch = useDispatch();
@@ -197,11 +161,8 @@ function HomePage() {
           <h1 className="mt-5 text-4xl font-black leading-none tracking-tight text-white sm:text-[2.75rem]">
             Scores, fixtures, and match updates
           </h1>
-          <div className="mt-8 flex gap-3">
-            <button className="rounded-lg bg-[#e0e3e8] px-6 py-3 text-sm font-black text-[#141517] transition hover:bg-white shadow-[0_0_15px_rgba(224,227,232,0.15)]">Explore Live</button>
-            <button className="rounded-lg bg-[#26282b] px-6 py-3 text-sm font-black text-[#d3d7de] transition hover:bg-[#3c3e42] border border-[#3c3e42]/50">Full Schedule</button>
-          </div>
         </div>
+
 
         {/* Match Cards Grid */}
         <div className="grid gap-5 lg:grid-cols-3 xl:grid-cols-3">
@@ -218,34 +179,7 @@ function HomePage() {
           )}
         </div>
 
-        {/* Top Stories Header */}
-        <div className="mt-16 flex items-end justify-between mb-8">
-          <h2 className="text-3xl font-black text-white tracking-tight">Top stories</h2>
-          <a href="#" className="text-sm font-bold text-white hover:underline">View All News</a>
-        </div>
 
-        {/* Bottom Section */}
-        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-          <StoryCard />
-          
-          <aside className="rounded-2xl border border-[#26282b] bg-[#1a1c1e] p-6 flex flex-col">
-            <h2 className="text-[1.3rem] font-black text-white tracking-tight">League Standings</h2>
-            <div className="mt-8 space-y-4 flex-1">
-              {['India', 'Australia', 'South Africa', 'England'].map((team, index) => (
-                <div key={team} className="flex items-center justify-between rounded-xl bg-[#1e2023] border border-[#2a2c30] px-5 py-4 transition hover:border-[#3c3e42]">
-                  <div className="flex items-center gap-4">
-                    <span className="w-4 text-center font-black text-white">{index + 1}</span>
-                    <span className="text-sm font-bold text-[#d3d7de]">{team}</span>
-                  </div>
-                  <span className="text-sm font-black text-white">{120 - index * 8} Pts</span>
-                </div>
-              ))}
-            </div>
-            <button className="mt-8 w-full rounded-xl bg-[#26282b] py-3.5 text-xs font-black text-white transition hover:bg-[#3c3e42]">
-               Full Points Table
-            </button>
-          </aside>
-        </div>
 
       </div>
     </section>
