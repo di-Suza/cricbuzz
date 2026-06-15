@@ -35,3 +35,5 @@ export const {
   useGetPublicMatchCommentaryQuery,
   useGetHomeStatusQuery,
 } = homeApi;
+
+export { homeApi };

@@ -33,11 +33,11 @@ class ErrorHandler {
     };
   }
 
-  static handle(error, _req, res, _next) {
+  static handle(error, req, res, _next) {
     const normalized = ErrorHandler.normalize(error);
 
     if (normalized.statusCode >= 500) {
-      logger.error({ error }, 'Unhandled application error');
+      logger.error(`${req.method} ${req.originalUrl} failed: ${error.message || 'Unhandled application error'}`);
     }
 
     res.status(normalized.statusCode).json({

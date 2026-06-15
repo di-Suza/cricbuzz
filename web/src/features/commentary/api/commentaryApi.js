@@ -52,3 +52,5 @@ export const {
   useDeleteCommentaryMutation,
   useGetCommentaryQuery,
 } = commentaryApi;
+
+export { commentaryApi };

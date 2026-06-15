@@ -58,7 +58,7 @@ class ResponseCache {
       const redisCached = await this.getRedis(key);
       if (redisCached) return redisCached;
     } catch (error) {
-      logger.warn({ error, key }, 'Redis cache read failed');
+      logger.warn(`Redis cache read failed for ${key}`);
     }
 
     return this.getMemory(key);
@@ -70,13 +70,14 @@ class ResponseCache {
     try {
       await this.setRedis(key, body, statusCode, ttlSeconds);
     } catch (error) {
-      logger.warn({ error, key }, 'Redis cache write failed');
+      logger.warn(`Redis cache write failed for ${key}`);
     }
   }
 
-  middleware(ttlSeconds) {
+  middleware(ttlSeconds, options = {}) {
     return async (req, res, next) => {
       if (req.method !== 'GET') return next();
+      if (options.shouldBypass?.(req)) return next();
 
       const key = this.buildKey(req);
       const cached = await this.get(key);
@@ -115,7 +116,7 @@ class ResponseCache {
         await client.del(keys);
       }
     } catch (error) {
-      logger.warn({ error }, 'Redis cache clear failed');
+      logger.warn('Redis cache clear failed');
     }
   }
 }

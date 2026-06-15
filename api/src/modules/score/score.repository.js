@@ -57,7 +57,7 @@ class ScoreRepository extends ScaffoldRepository {
   updateScore(scoreId, data) {
     return this.populateScore(
       this.scoreModel.findByIdAndUpdate(scoreId, data, {
-        new: true,
+        returnDocument: 'after',
         runValidators: true,
       })
     );

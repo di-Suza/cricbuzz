@@ -53,6 +53,16 @@ function publicOnlyRouter(...middlewares) {
   return router;
 }
 
+function noStore(_req, res, next) {
+  res.set('Cache-Control', 'no-store');
+  return next();
+}
+
+function shouldBypassLiveMatchCache(req) {
+  const status = String(req.query.status || '').toLowerCase();
+  return req.originalUrl.includes('/center') || ['live', 'innings_break'].includes(status);
+}
+
 class App {
   constructor() {
     this.app = express();
@@ -69,6 +79,7 @@ class App {
 
   registerGlobalMiddleware() {
     this.app.disable('x-powered-by');
+    this.app.disable('etag');
     this.app.use(requestLogger);
     this.app.use(securityHeaders);
     const allowedOrigins = getAllowedCorsOrigins();
@@ -96,18 +107,18 @@ class App {
   }
 
   registerPublicRoutes() {
-    this.app.use('/api/public/home', responseCache(10), publicHomeRoutes);
-    this.app.use('/api/public/matches/:matchId/commentary', responseCache(5), publicCommentaryRoutes);
-    this.app.use('/api/public/matches', responseCache(10), publicMatchRoutes);
+    this.app.use('/api/public/home', noStore, publicHomeRoutes);
+    this.app.use('/api/public/matches/:matchId/commentary', noStore, publicCommentaryRoutes);
+    this.app.use('/api/public/matches', noStore, responseCache(10, { shouldBypass: shouldBypassLiveMatchCache }), publicMatchRoutes);
     this.app.use('/api/public/series/:seriesId/points-table', responseCache(30), publicPointsTableRoutes);
     this.app.use('/api/public/search', responseCache(30), publicSearchRoutes);
     this.app.use('/api/public/series', responseCache(60), publicSeriesRoutes);
     this.app.use('/api/public/teams', responseCache(60), publicTeamRoutes);
     this.app.use('/api/public/players', responseCache(60), publicPlayerRoutes);
 
-    this.app.use('/api/home', responseCache(10), publicHomeRoutes);
-    this.app.use('/api/matches/:matchId/commentary', publicOnlyRouter(responseCache(5), publicCommentaryRoutes));
-    this.app.use('/api/matches', publicOnlyRouter(responseCache(10), publicMatchRoutes));
+    this.app.use('/api/home', noStore, publicHomeRoutes);
+    this.app.use('/api/matches/:matchId/commentary', publicOnlyRouter(noStore, publicCommentaryRoutes));
+    this.app.use('/api/matches', publicOnlyRouter(noStore, responseCache(10, { shouldBypass: shouldBypassLiveMatchCache }), publicMatchRoutes));
     this.app.use('/api/series/:seriesId/points-table', publicOnlyRouter(responseCache(30), publicPointsTableRoutes));
     this.app.use('/api/search', responseCache(30), publicSearchRoutes);
     this.app.use('/api/series', publicOnlyRouter(responseCache(60), publicSeriesRoutes));

@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useDispatch } from 'react-redux';
 import { Link, useParams } from 'react-router';
 
 import { getSocket } from '../../../shared/socket/socketClient.js';
-import { useGetPublicMatchCenterQuery, useGetPublicMatchCommentaryQuery } from '../api/homeApi.js';
+import { homeApi, useGetPublicMatchCenterQuery, useGetPublicMatchCommentaryQuery } from '../api/homeApi.js';
 
 function getTeamName(team) {
   return team?.shortName || team?.name || 'Team';
@@ -10,6 +11,10 @@ function getTeamName(team) {
 
 function getPlayerId(player) {
   return String(player?._id || player?.id || player || '');
+}
+
+function getEntityId(value) {
+  return String(value?._id || value?.id || value || '');
 }
 
 function getFullTeamName(team) {
@@ -42,6 +47,76 @@ function isResultStatus(status) {
   return ['RESULT', 'COMPLETED', 'ABANDONED'].includes(status);
 }
 
+function formatInningsLabel(innings) {
+  const value = Number(innings || 1);
+  if (value === 1) return '1st Innings';
+  if (value === 2) return '2nd Innings';
+  if (value === 3) return '3rd Innings';
+  return `${value}th Innings`;
+}
+
+function formatBalls(balls = 0) {
+  return `${Math.floor(Number(balls || 0) / 6)}.${Number(balls || 0) % 6}`;
+}
+
+function upsertByIdOrInnings(items = [], item) {
+  if (!item) return items;
+  const itemId = getEntityId(item);
+  const index = items.findIndex((entry) => (
+    (itemId && getEntityId(entry) === itemId)
+    || Number(entry?.innings) === Number(item.innings)
+  ));
+
+  if (index === -1) return [...items, item].sort((a, b) => Number(a.innings) - Number(b.innings));
+
+  return items.map((entry, entryIndex) => (entryIndex === index ? { ...entry, ...item } : entry));
+}
+
+function patchStatsWithEvent(stats = [], event = {}) {
+  const innings = Number(event.innings);
+  const strikerId = getPlayerId(event.striker);
+  const dismissedId = getPlayerId(event.dismissedPlayer);
+  const bowlerId = getPlayerId(event.bowler);
+  const batterRuns = Number(event.batterRuns ?? event.runs ?? 0);
+
+  return stats.map((entry) => {
+    if (Number(entry.innings) !== innings) return entry;
+
+    return {
+      ...entry,
+      batting: (entry.batting || []).map((row) => {
+        const rowPlayerId = getPlayerId(row.player);
+        const next = { ...row };
+
+        if (rowPlayerId === strikerId) {
+          next.runs = Number(next.runs || 0) + batterRuns;
+          next.balls = Number(next.balls || 0) + (event.isLegalBall ? 1 : 0);
+          next.fours = Number(next.fours || 0) + (batterRuns === 4 ? 1 : 0);
+          next.sixes = Number(next.sixes || 0) + (batterRuns === 6 ? 1 : 0);
+        }
+
+        if (dismissedId && rowPlayerId === dismissedId) {
+          next.isOut = true;
+        }
+
+        return next;
+      }),
+      bowling: (entry.bowling || []).map((row) => {
+        if (getPlayerId(row.player) !== bowlerId) return row;
+
+        const nextBalls = Number(row.balls || 0) + (event.isLegalBall ? 1 : 0);
+        return {
+          ...row,
+          balls: nextBalls,
+          overs: formatBalls(nextBalls),
+          runsConceded: Number(row.runsConceded || 0) + Number(event.totalRuns || 0),
+          wickets: Number(row.wickets || 0) + (event.isWicket && !['RUN_OUT', 'RETIRED_HURT'].includes(event.wicketType) ? 1 : 0),
+        };
+      }),
+    };
+  });
+}
+
 function TeamBadge({ team, align = 'center' }) {
   return (
     <div className={`flex flex-col items-${align} gap-3`}>
@@ -61,6 +136,7 @@ function TeamBadge({ team, align = 'center' }) {
 
 function MatchHero({ match, liveScore }) {
   const live = isLiveStatus(match.status);
+  const statusLabel = live ? `LIVE - ${formatInningsLabel(liveScore?.innings)}` : match.status.replaceAll('_', ' ');
 
   return (
     <section className="rounded-2xl border border-[#26282b] bg-[#1a1c1e] p-6 shadow-sm">
@@ -72,7 +148,7 @@ function MatchHero({ match, liveScore }) {
         {/* Score */}
         <div className="flex flex-col items-center text-center">
            <span className="rounded-full bg-[#293142] border border-[#6d7890] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#b8c9ff] mb-4">
-             {live ? 'LIVE • 1st Innings' : match.status.replaceAll('_', ' ')}
+             {statusLabel}
            </span>
            <h1 className="text-[2.75rem] font-black leading-none tracking-tight text-white drop-shadow-md">
              {live ? `${getTeamName(liveScore?.battingTeam)} ${liveScore?.runs || 0}/${liveScore?.wickets || 0}` : 'VS'}
@@ -104,17 +180,19 @@ function MatchHero({ match, liveScore }) {
 }
 
 function MatchPulse({ recentEvents = [], liveScore }) {
+  const recentOverRuns = recentEvents.slice(0, 6).reduce((total, event) => total + Number(event?.totalRuns || 0), 0);
+
   return (
     <section className="rounded-2xl border border-[#26282b] bg-[#1a1c1e] p-6 shadow-sm">
       <h2 className="text-[1.3rem] font-black text-white">Match Pulse</h2>
       <div className="mt-6 border-b border-[#26282b] pb-6">
         <div className="flex justify-between text-[11px] font-black uppercase tracking-[0.15em] text-[#d3d7de]">
-          <span>INDIA <span className="text-[#a0a5ad] ml-1">78%</span></span>
-          <span>AUSTRALIA <span className="text-[#a0a5ad] ml-1">22%</span></span>
+          <span>{getTeamName(liveScore?.battingTeam)} <span className="text-[#a0a5ad] ml-1">{liveScore?.runs || 0}/{liveScore?.wickets || 0}</span></span>
+          <span>{liveScore?.overs || '0.0'} OV</span>
         </div>
         <div className="mt-3 flex h-2 overflow-hidden rounded-full">
-          <div className="h-full w-[78%] bg-[#8ba4fc]" />
-          <div className="h-full flex-1 bg-[#886966]" />
+          <div className="h-full bg-[#8ba4fc]" style={{ width: `${Math.min(Number(liveScore?.runRate || 0) * 8, 100)}%` }} />
+          <div className="h-full flex-1 bg-[#31393d]" />
         </div>
       </div>
       <div className="mt-6">
@@ -138,7 +216,7 @@ function MatchPulse({ recentEvents = [], liveScore }) {
           {/* Mock run total */}
           {recentEvents.length > 0 && (
             <div className="ml-auto flex flex-col items-center justify-center leading-tight">
-               <span className="text-[10px] font-black text-[#a0a5ad]">14</span>
+               <span className="text-[10px] font-black text-[#a0a5ad]">{recentOverRuns}</span>
                <span className="text-[10px] font-bold text-[#a0a5ad]">Runs</span>
             </div>
           )}
@@ -293,6 +371,8 @@ import ResultMatchView from '../components/ResultMatchView.jsx';
 
 function PublicMatchPage() {
   const { matchId } = useParams();
+  const dispatch = useDispatch();
+  const commentaryQueryArgs = useMemo(() => ({ matchId, limit: 30 }), [matchId]);
 
   const {
     data,
@@ -302,7 +382,7 @@ function PublicMatchPage() {
   const {
     data: commentaryResponse = { data: [] },
     refetch: refetchCommentary,
-  } = useGetPublicMatchCommentaryQuery({ matchId, limit: 30 }, { skip: !matchId });
+  } = useGetPublicMatchCommentaryQuery(commentaryQueryArgs, { skip: !matchId });
 
   const match = data?.matchInfo;
   const upcoming = isUpcomingStatus(match?.status);
@@ -320,15 +400,72 @@ function PublicMatchPage() {
       refetchCommentary();
     };
 
+    const refreshSoon = () => {
+      window.setTimeout(refreshAll, 200);
+    };
+
+    const patchScore = (payload = {}) => {
+      if (String(payload.matchId) !== String(matchId) || !payload.score) return;
+
+      dispatch(homeApi.util.updateQueryData('getPublicMatchCenter', matchId, (draft) => {
+        draft.liveScore = payload.score;
+        draft.scores = upsertByIdOrInnings(draft.scores || [], payload.score);
+
+        if (payload.event) {
+          const eventId = getEntityId(payload.event);
+          draft.recentEvents = [
+            payload.event,
+            ...(draft.recentEvents || []).filter((event) => getEntityId(event) !== eventId),
+          ].slice(0, 24);
+          draft.stats = patchStatsWithEvent(draft.stats || [], payload.event);
+        }
+      }));
+
+      refreshSoon();
+    };
+
     const refreshCurrentMatch = (payload = {}) => {
       if (!payload.matchId || String(payload.matchId) === String(matchId)) {
+        if (payload.reason === 'score.updated') return;
         refreshAll();
       }
     };
+    const patchCreatedCommentary = (payload = {}) => {
+      if (String(payload.matchId) !== String(matchId) || !payload.commentary) {
+        refetchCommentary();
+        return;
+      }
 
-    socket.on('score.updated', refreshAll);
-    socket.on('commentary.created', refreshAll);
-    socket.on('commentary.deleted', refreshAll);
+      dispatch(homeApi.util.updateQueryData('getPublicMatchCommentary', commentaryQueryArgs, (draft) => {
+        const commentaryId = getEntityId(payload.commentary);
+        const alreadyExists = (draft.data || []).some((entry) => getEntityId(entry) === commentaryId);
+        draft.data = [
+          payload.commentary,
+          ...(draft.data || []).filter((entry) => getEntityId(entry) !== commentaryId),
+        ].slice(0, commentaryQueryArgs.limit);
+        if (draft.meta && !alreadyExists) {
+          draft.meta.total = Number(draft.meta.total || 0) + 1;
+        }
+      }));
+    };
+    const patchDeletedCommentary = (payload = {}) => {
+      if (String(payload.matchId) !== String(matchId) || !payload.commentaryId) {
+        refetchCommentary();
+        return;
+      }
+
+      dispatch(homeApi.util.updateQueryData('getPublicMatchCommentary', commentaryQueryArgs, (draft) => {
+        const before = draft.data?.length || 0;
+        draft.data = (draft.data || []).filter((entry) => getEntityId(entry) !== String(payload.commentaryId));
+        if (draft.meta && before !== draft.data.length) {
+          draft.meta.total = Math.max(Number(draft.meta.total || 0) - 1, 0);
+        }
+      }));
+    };
+
+    socket.on('score.updated', patchScore);
+    socket.on('commentary.created', patchCreatedCommentary);
+    socket.on('commentary.deleted', patchDeletedCommentary);
     socket.on('match.status.updated', refreshAll);
     socket.on('match.started', refreshAll);
     socket.on('match.completed', refreshAll);
@@ -338,9 +475,9 @@ function PublicMatchPage() {
 
     return () => {
       socket.emit('match:leave', matchId);
-      socket.off('score.updated', refreshAll);
-      socket.off('commentary.created', refreshAll);
-      socket.off('commentary.deleted', refreshAll);
+      socket.off('score.updated', patchScore);
+      socket.off('commentary.created', patchCreatedCommentary);
+      socket.off('commentary.deleted', patchDeletedCommentary);
       socket.off('match.status.updated', refreshAll);
       socket.off('match.started', refreshAll);
       socket.off('match.completed', refreshAll);
@@ -348,7 +485,7 @@ function PublicMatchPage() {
       socket.off('playingXI.updated', refreshAll);
       socket.off('public.feed.updated', refreshCurrentMatch);
     };
-  }, [matchId, refetchCenter, refetchCommentary]);
+  }, [commentaryQueryArgs, dispatch, matchId, refetchCenter, refetchCommentary]);
 
   if (isLoading) {
     return <div className="mx-auto max-w-7xl px-4 py-10 text-[#aeb5c0]">Loading match...</div>;

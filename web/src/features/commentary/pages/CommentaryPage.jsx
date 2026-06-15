@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useDispatch } from 'react-redux';
 
 import ConfirmModal from '../../../shared/components/ConfirmModal.jsx';
 import ModulePage from '../../../shared/components/ModulePage.jsx';
@@ -7,7 +8,7 @@ import { useToast } from '../../../shared/components/ToastProvider.jsx';
 import { getSocket } from '../../../shared/socket/socketClient.js';
 import { useGetMatchesQuery } from '../../matches/api/matchesApi.js';
 import { useGetScoreboardQuery } from '../../scoring/api/scoringApi.js';
-import { useCreateCommentaryMutation, useDeleteCommentaryMutation, useGetCommentaryQuery } from '../api/commentaryApi.js';
+import { commentaryApi, useCreateCommentaryMutation, useDeleteCommentaryMutation, useGetCommentaryQuery } from '../api/commentaryApi.js';
 
 const COMMENTARY_TYPES = ['NORMAL', 'FOUR', 'SIX', 'WICKET', 'MILESTONE'];
 
@@ -28,7 +29,12 @@ function formatBall(event) {
   return parts.join(' - ');
 }
 
+function getEntityId(value) {
+  return String(value?._id || value?.id || value || '');
+}
+
 function CommentaryPage() {
+  const dispatch = useDispatch();
   const toast = useToast();
   const [activeMatchId, setActiveMatchId] = useState('');
   const [page, setPage] = useState(1);
@@ -60,6 +66,10 @@ function CommentaryPage() {
   const recentEvents = scoreboard?.recentEvents || [];
   const commentary = commentaryResponse.data || [];
   const meta = commentaryResponse.meta;
+  const commentaryQueryArgs = useMemo(
+    () => ({ matchId: activeMatchId, page, limit }),
+    [activeMatchId, page, limit]
+  );
 
   useEffect(() => {
     if (!activeMatchId && liveMatches.length > 0) {
@@ -87,20 +97,52 @@ function CommentaryPage() {
     const refreshCommentary = () => {
       refetchCommentary();
     };
+    const patchCreatedCommentary = (payload = {}) => {
+      if (String(payload.matchId) !== String(activeMatchId) || !payload.commentary) {
+        refreshCommentary();
+        return;
+      }
+
+      dispatch(commentaryApi.util.updateQueryData('getCommentary', commentaryQueryArgs, (draft) => {
+        const commentaryId = getEntityId(payload.commentary);
+        const alreadyExists = (draft.data || []).some((entry) => getEntityId(entry) === commentaryId);
+        draft.data = [
+          payload.commentary,
+          ...(draft.data || []).filter((entry) => getEntityId(entry) !== commentaryId),
+        ].slice(0, limit);
+        if (draft.meta && !alreadyExists) {
+          draft.meta.total = Number(draft.meta.total || 0) + 1;
+        }
+      }));
+    };
+    const patchDeletedCommentary = (payload = {}) => {
+      if (String(payload.matchId) !== String(activeMatchId) || !payload.commentaryId) {
+        refreshCommentary();
+        return;
+      }
+
+      dispatch(commentaryApi.util.updateQueryData('getCommentary', commentaryQueryArgs, (draft) => {
+        const before = draft.data?.length || 0;
+        draft.data = (draft.data || []).filter((entry) => getEntityId(entry) !== String(payload.commentaryId));
+        if (draft.meta && before !== draft.data.length) {
+          draft.meta.total = Math.max(Number(draft.meta.total || 0) - 1, 0);
+        }
+      }));
+    };
 
     socket.on('score.updated', refreshScore);
-    socket.on('commentary.created', refreshCommentary);
-    socket.on('commentary.deleted', refreshCommentary);
+    socket.on('commentary.created', patchCreatedCommentary);
+    socket.on('commentary.deleted', patchDeletedCommentary);
     socket.on('match.status.updated', refreshScore);
 
     return () => {
       socket.emit('match:leave', activeMatchId);
       socket.off('score.updated', refreshScore);
-      socket.off('commentary.created', refreshCommentary);
-      socket.off('commentary.deleted', refreshCommentary);
+      socket.off('commentary.created', patchCreatedCommentary);
+      socket.off('commentary.deleted', patchDeletedCommentary);
       socket.off('match.status.updated', refreshScore);
     };
-  }, [activeMatchId, refetchCommentary, refetchMatches, refetchScoreboard]);
+  }, [activeMatchId, commentaryQueryArgs, dispatch, limit, refetchCommentary, refetchMatches, refetchScoreboard]);
 
   function handleLimitChange(nextLimit) {
     setLimit(nextLimit);
