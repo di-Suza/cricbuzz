@@ -12,14 +12,15 @@ const playerSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    image: {
-      type: String,
-      default: null, // ImageKit URL
-    },
+   
     role: {
       type: String,
       enum: PLAYER_ROLES,
       required: true,
+    },
+     image: {
+      type: String,
+      default: null, // ImageKit URL
     },
     country: {
       type: String,
