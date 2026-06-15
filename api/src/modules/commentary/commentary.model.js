@@ -14,7 +14,14 @@ const commentarySchema = new mongoose.Schema(
       ref: 'ScoreEvent',
       default: null,
     },
-    innings: {
+   
+    ball: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 6,
+    },
+     innings: {
       type: Number,
       required: true,
       min: 1,
@@ -24,12 +31,6 @@ const commentarySchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0,
-    },
-    ball: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 6,
     },
     text: {
       type: String,
