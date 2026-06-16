@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
+import LoadingLabel from '../../../shared/components/LoadingLabel.jsx';
 import { useLoginMutation } from '../api/authApi.js';
 
 const initialForm = {
@@ -79,7 +80,7 @@ function LoginPage() {
             disabled={isLoading}
             className="h-11 w-full rounded-md bg-emerald-400 px-4 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-300 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isLoading ? 'Signing in' : 'Login'}
+            {isLoading ? <LoadingLabel label="Signing in" /> : 'Login'}
           </button>
         </form>
       </div>

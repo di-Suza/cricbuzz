@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import LoadingLabel from '../../../shared/components/LoadingLabel.jsx';
 import Modal from '../../../shared/components/Modal.jsx';
 import { useToast } from '../../../shared/components/ToastProvider.jsx';
 import {
@@ -245,7 +246,7 @@ function SeriesForm({ isOpen, onClose, series }) {
             Cancel
           </button>
           <button type="submit" disabled={isSubmitting} className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
-            {isSubmitting ? 'Saving...' : 'Save Series'}
+            {isSubmitting ? <LoadingLabel label="Saving" /> : 'Save Series'}
           </button>
         </div>
       </form>

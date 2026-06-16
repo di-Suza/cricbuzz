@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import ConfirmModal from '../../../shared/components/ConfirmModal.jsx';
+import LoadingLabel from '../../../shared/components/LoadingLabel.jsx';
+import LoadingState from '../../../shared/components/LoadingState.jsx';
 import ModulePage from '../../../shared/components/ModulePage.jsx';
 import PaginationBar from '../../../shared/components/PaginationBar.jsx';
 import { useToast } from '../../../shared/components/ToastProvider.jsx';
@@ -200,7 +202,7 @@ function CommentaryPage() {
 
           <div className="divide-y divide-slate-200">
             {isMatchesLoading ? (
-              <div className="p-6 text-center text-sm text-slate-500">Loading matches...</div>
+              <LoadingState label="Loading matches" variant="panel" className="m-4 min-h-32" />
             ) : liveMatches.length === 0 ? (
               <div className="p-6 text-center text-sm text-slate-500">No live matches right now.</div>
             ) : (
@@ -316,7 +318,7 @@ function CommentaryPage() {
                     disabled={createState.isLoading || !form.text.trim()}
                     className="h-11 rounded-lg bg-emerald-600 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {createState.isLoading ? 'Publishing...' : 'Publish Commentary'}
+                    {createState.isLoading ? <LoadingLabel label="Publishing" /> : 'Publish Commentary'}
                   </button>
                 </div>
               </form>
@@ -325,13 +327,13 @@ function CommentaryPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-4">
                   <h3 className="text-base font-bold text-slate-950">Timeline</h3>
                   {isCommentaryFetching && !isCommentaryLoading ? (
-                    <span className="text-xs font-semibold text-slate-500">Syncing</span>
+                    <LoadingState label="Syncing" size="sm" variant="inline" />
                   ) : null}
                 </div>
 
                 <div className="divide-y divide-slate-100">
                   {isCommentaryLoading ? (
-                    <div className="p-8 text-center text-sm text-slate-500">Loading commentary...</div>
+                    <LoadingState label="Loading commentary" variant="panel" className="m-4" />
                   ) : commentary.length === 0 ? (
                     <div className="p-8 text-center text-sm text-slate-500">No commentary yet.</div>
                   ) : (

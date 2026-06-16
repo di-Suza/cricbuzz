@@ -3,6 +3,8 @@ import { useSelector } from 'react-redux';
 
 import { useRegisterUserMutation } from '../../auth/api/authApi.js';
 import { selectCurrentRole } from '../../auth/store/authSlice.js';
+import LoadingLabel from '../../../shared/components/LoadingLabel.jsx';
+import LoadingState from '../../../shared/components/LoadingState.jsx';
 import {
   useDeleteUserMutation,
   useGetUsersQuery,
@@ -219,7 +221,7 @@ function UsersPage() {
               disabled={isFetching}
               className="h-10 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isFetching ? 'Refreshing' : 'Refresh'}
+              {isFetching ? <LoadingLabel label="Refreshing" /> : 'Refresh'}
             </button>
             <button
               type="button"
@@ -279,7 +281,7 @@ function UsersPage() {
 
         <div className="min-w-[940px] divide-y divide-slate-100">
           {isLoading ? (
-            <div className="px-4 py-8 text-center text-sm text-slate-500">Loading users...</div>
+            <LoadingState label="Loading users" variant="row" className="min-h-28" />
           ) : users.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-slate-500">No users found.</div>
           ) : (
@@ -405,7 +407,7 @@ function UsersPage() {
                 disabled={deleteState.isLoading}
                 className="h-10 rounded-md bg-rose-600 px-4 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {deleteState.isLoading ? 'Deleting' : 'Delete User'}
+                {deleteState.isLoading ? <LoadingLabel label="Deleting" /> : 'Delete User'}
               </button>
             </div>
           </div>
@@ -516,7 +518,7 @@ function UserFormModal({
               disabled={isLoading}
               className="h-10 rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 focus:outline-none focus:ring-4 focus:ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isLoading ? loadingLabel : submitLabel}
+              {isLoading ? <LoadingLabel label={loadingLabel} /> : submitLabel}
             </button>
           </div>
         </form>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import LoadingLabel from '../../../shared/components/LoadingLabel.jsx';
 import Modal from '../../../shared/components/Modal.jsx';
 import { useToast } from '../../../shared/components/ToastProvider.jsx';
 import {
@@ -159,7 +160,7 @@ function MatchForm({ isOpen, onClose, series, match }) {
             Cancel
           </button>
           <button type="submit" disabled={isSubmitting || !series?._id} className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
-            {isSubmitting ? 'Saving...' : 'Save Match'}
+            {isSubmitting ? <LoadingLabel label="Saving" /> : 'Save Match'}
           </button>
         </div>
       </form>

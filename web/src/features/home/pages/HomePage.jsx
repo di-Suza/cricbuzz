@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { Link } from 'react-router';
+import LoadingState from '../../../shared/components/LoadingState.jsx';
 import { getSocket } from '../../../shared/socket/socketClient.js';
 import { homeApi, useGetHomeStatusQuery } from '../api/homeApi.js';
 
@@ -167,9 +168,7 @@ function HomePage() {
         {/* Match Cards Grid */}
         <div className="grid gap-5 lg:grid-cols-3 xl:grid-cols-3">
           {isLoading ? (
-            <div className="rounded-2xl border border-[#26282b] bg-[#1a1c1e] p-6 text-sm text-[#a0a5ad] lg:col-span-3">
-              Loading matches...
-            </div>
+            <LoadingState label="Loading matches" variant="panel" className="lg:col-span-3" />
           ) : (
             <>
               {liveMatches.map((match) => <MatchCard key={match._id} match={match} tone="live" />)}

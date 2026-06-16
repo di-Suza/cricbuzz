@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import LoadingLabel from '../../../shared/components/LoadingLabel.jsx';
+import LoadingState from '../../../shared/components/LoadingState.jsx';
 import { useToast } from '../../../shared/components/ToastProvider.jsx';
 import { getSocket } from '../../../shared/socket/socketClient.js';
 import { useGetHomeStatusQuery } from '../../home/api/homeApi.js';
@@ -383,7 +385,7 @@ function ScoringPage() {
         </div>
 
         {isMatchesLoading ? (
-          <div className="text-sm text-[#87909e]">Loading matches...</div>
+          <LoadingState label="Loading matches" variant="panel" className="min-h-36" />
         ) : liveMatches.length === 0 ? (
           <div className="text-sm text-[#87909e]">No live matches.</div>
         ) : (
@@ -444,6 +446,8 @@ function ScoringPage() {
           <div className="flex h-full items-center justify-center rounded-xl border border-[#26282b] bg-[#1a1c1e] p-8 text-[#87909e]">
             Select a match to start scoring
           </div>
+        ) : isScoreLoading ? (
+          <LoadingState label="Loading scoring console" size="lg" variant="panel" className="min-h-[420px]" />
         ) : (
           <>
             {/* Active State Header */}
@@ -671,8 +675,14 @@ function ScoringPage() {
                     disabled={addState.isLoading || !canAddBall}
                     className="w-full h-12 rounded-lg bg-[#a9c3ff] text-[#081018] font-bold flex items-center justify-center gap-2 transition hover:bg-[#8fb5ff] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    {addState.isLoading ? 'COMMITTING...' : 'COMMIT BALL'}
+                    {addState.isLoading ? (
+                      <LoadingLabel label="COMMITTING" />
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        COMMIT BALL
+                      </>
+                    )}
                   </button>
                   {!canAddBall && !isSelectedInningsComplete && (
                     <p className="text-center text-xs text-[#f43f5e] mt-2">Please ensure all player selections are completed.</p>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ConfirmModal from '../../../shared/components/ConfirmModal.jsx';
+import LoadingState from '../../../shared/components/LoadingState.jsx';
 import ModulePage from '../../../shared/components/ModulePage.jsx';
 import PaginationBar from '../../../shared/components/PaginationBar.jsx';
 import { useToast } from '../../../shared/components/ToastProvider.jsx';
@@ -115,7 +116,7 @@ function PlayersPage() {
         </div>
 
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500">Loading players...</div>
+          <LoadingState label="Loading players" variant="panel" className="m-4" />
         ) : players.length === 0 ? (
           <div className="p-8 text-center text-slate-500">No players found. Create one to get started.</div>
         ) : (
@@ -171,7 +172,7 @@ function PlayersPage() {
 
         {isFetching && !isLoading && (
           <div className="border-t border-slate-100 bg-white px-4 py-2 text-xs font-medium text-slate-500">
-            Updating player list...
+            <LoadingState label="Updating player list" size="sm" variant="inline" />
           </div>
         )}
       </ModulePage>

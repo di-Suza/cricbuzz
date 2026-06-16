@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { Link, useParams } from 'react-router';
 
+import LoadingState from '../../../shared/components/LoadingState.jsx';
 import { getSocket } from '../../../shared/socket/socketClient.js';
 import { homeApi, useGetPublicMatchCenterQuery, useGetPublicMatchCommentaryQuery } from '../api/homeApi.js';
 
@@ -488,7 +489,11 @@ function PublicMatchPage() {
   }, [commentaryQueryArgs, dispatch, matchId, refetchCenter, refetchCommentary]);
 
   if (isLoading) {
-    return <div className="mx-auto max-w-7xl px-4 py-10 text-[#aeb5c0]">Loading match...</div>;
+    return (
+      <div className="min-h-screen bg-[#0d1211] px-4 py-10">
+        <LoadingState label="Loading match center" size="lg" variant="page" className="min-h-[70vh]" />
+      </div>
+    );
   }
 
   if (!match) {

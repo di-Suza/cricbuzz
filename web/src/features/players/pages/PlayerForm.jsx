@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import LoadingLabel from '../../../shared/components/LoadingLabel.jsx';
 import Modal from '../../../shared/components/Modal.jsx';
 import { useToast } from '../../../shared/components/ToastProvider.jsx';
 import { useCreatePlayerMutation, useUpdatePlayerMutation } from '../api/playersApi.js';
@@ -178,7 +179,7 @@ function PlayerForm({ isOpen, onClose, player }) {
             disabled={isSubmitting}
             className="inline-flex justify-center rounded-md border border-transparent bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
           >
-            {isSubmitting ? 'Saving...' : 'Save Player'}
+            {isSubmitting ? <LoadingLabel label="Saving" /> : 'Save Player'}
           </button>
         </div>
       </form>
