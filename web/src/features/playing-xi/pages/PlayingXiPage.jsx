@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import LoadingLabel from '../../../shared/components/LoadingLabel.jsx';
+import LoadingState from '../../../shared/components/LoadingState.jsx';
 import Modal from '../../../shared/components/Modal.jsx';
 import ModulePage from '../../../shared/components/ModulePage.jsx';
 import PaginationBar from '../../../shared/components/PaginationBar.jsx';
@@ -262,7 +264,7 @@ function PlayingXiModal({ matchId, onClose }) {
   return (
     <Modal isOpen={Boolean(matchId)} onClose={saveState.isLoading ? undefined : onClose} title="Select Playing XI" maxWidth="max-w-6xl">
       {isLoading ? (
-        <div className="py-10 text-center text-sm text-slate-500">Loading match squads...</div>
+        <LoadingState label="Loading match squads" variant="panel" className="border-0 bg-transparent" />
       ) : !match ? (
         <div className="py-10 text-center text-sm text-slate-500">Match not found.</div>
       ) : (
@@ -319,7 +321,7 @@ function PlayingXiModal({ matchId, onClose }) {
                 disabled={!ready || saveState.isLoading}
                 className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {saveState.isLoading ? 'Confirming...' : 'Confirm XI'}
+                {saveState.isLoading ? <LoadingLabel label="Confirming" /> : 'Confirm XI'}
               </button>
             </div>
           </div>
@@ -375,7 +377,9 @@ function PlayingXiPage() {
               <tbody className="divide-y divide-slate-100">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-8 text-center text-slate-500">Loading eligible matches...</td>
+                    <td colSpan="6" className="px-6 py-6">
+                      <LoadingState label="Loading eligible matches" variant="row" />
+                    </td>
                   </tr>
                 ) : matches.length === 0 ? (
                   <tr>
@@ -421,7 +425,7 @@ function PlayingXiPage() {
 
             {isFetching && !isLoading && (
               <div className="border-t border-slate-100 bg-white px-4 py-2 text-xs font-medium text-slate-500">
-                Updating eligible matches...
+                <LoadingState label="Updating eligible matches" size="sm" variant="inline" />
               </div>
             )}
           </div>

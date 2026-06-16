@@ -3,7 +3,8 @@ import { Mutex } from 'async-mutex';
 
 import { clearAuth, setAccessToken } from '../../features/auth/store/authSlice.js';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cricbuzz-whwp.onrender.com/api';
+const API_BASE_URL = 'https://cricbuzz-whwp.onrender.com/api';
+
 const refreshMutex = new Mutex();
 
 const rawBaseQuery = fetchBaseQuery({

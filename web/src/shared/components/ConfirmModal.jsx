@@ -1,4 +1,5 @@
 import Modal from './Modal.jsx';
+import LoadingLabel from './LoadingLabel.jsx';
 
 function ConfirmModal({
   isOpen,
@@ -36,7 +37,7 @@ function ConfirmModal({
             disabled={isLoading}
             className={`h-10 rounded-md px-4 text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60 ${confirmClassName}`}
           >
-            {isLoading ? 'Working...' : confirmLabel}
+            {isLoading ? <LoadingLabel label="Working" /> : confirmLabel}
           </button>
         </div>
       </div>

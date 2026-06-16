@@ -3,6 +3,8 @@ import { useMemo, useState } from 'react';
 import { useGetPlayersQuery } from '../../players/api/playersApi.js';
 import { PLAYER_ROLE_OPTIONS, formatPlayerOptionValue } from '../../players/constants/playerOptions.js';
 import { useGetTeamByIdQuery, useGetTeamsQuery } from '../../teams/api/teamsApi.js';
+import LoadingLabel from '../../../shared/components/LoadingLabel.jsx';
+import LoadingState from '../../../shared/components/LoadingState.jsx';
 import ModulePage from '../../../shared/components/ModulePage.jsx';
 import PaginationBar from '../../../shared/components/PaginationBar.jsx';
 import { useToast } from '../../../shared/components/ToastProvider.jsx';
@@ -154,7 +156,7 @@ function SquadsPage() {
 
           <div className="divide-y divide-slate-200">
             {isTeamsLoading ? (
-              <div className="p-6 text-center text-sm text-slate-500">Loading teams...</div>
+              <LoadingState label="Loading teams" variant="panel" className="m-4 min-h-32" />
             ) : teams.length === 0 ? (
               <div className="p-6 text-center text-sm text-slate-500">No teams found.</div>
             ) : (
@@ -219,7 +221,11 @@ function SquadsPage() {
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                       {selectedTeam?.shortName || 'Team'}
                     </p>
-                    <h3 className="text-xl font-bold text-slate-950">{selectedTeam?.name || 'Loading team'}</h3>
+                    {isTeamFetching && !selectedTeam ? (
+                      <LoadingState label="Loading team" size="sm" variant="inline" className="mt-2" />
+                    ) : (
+                      <h3 className="text-xl font-bold text-slate-950">{selectedTeam?.name || 'Selected team'}</h3>
+                    )}
                   </div>
                 </div>
 
@@ -284,9 +290,11 @@ function SquadsPage() {
                     {isSquadFull ? (
                       <div className="px-4 py-6 text-center text-sm text-slate-500">Squad already has 20 players.</div>
                     ) : availablePlayers.length === 0 ? (
-                      <div className="px-4 py-6 text-center text-sm text-slate-500">
-                        {isPlayersFetching || isTeamFetching ? 'Loading players...' : 'No eligible players found.'}
-                      </div>
+                      isPlayersFetching || isTeamFetching ? (
+                        <LoadingState label="Loading players" variant="row" className="min-h-24" />
+                      ) : (
+                        <div className="px-4 py-6 text-center text-sm text-slate-500">No eligible players found.</div>
+                      )
                     ) : (
                       availablePlayers.map((player) => {
                         const playerId = getPlayerId(player);
@@ -315,7 +323,7 @@ function SquadsPage() {
                                 disabled={isSquadFull || addState.isLoading}
                                 className="h-9 rounded-md bg-zinc-950 px-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
                               >
-                                {isAdding ? 'Adding' : 'Add'}
+                                {isAdding ? <LoadingLabel label="Adding" size="xs" /> : 'Add'}
                               </button>
                             </span>
                           </div>
@@ -361,7 +369,7 @@ function SquadsPage() {
                               disabled={removeState.isLoading}
                               className="h-9 rounded-md border border-rose-100 bg-rose-50 px-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                              {isRemoving ? 'Removing' : 'Remove'}
+                              {isRemoving ? <LoadingLabel label="Removing" size="xs" /> : 'Remove'}
                             </button>
                           </span>
                         </div>

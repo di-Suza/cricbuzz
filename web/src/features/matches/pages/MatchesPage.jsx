@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import LoadingLabel from '../../../shared/components/LoadingLabel.jsx';
+import LoadingState from '../../../shared/components/LoadingState.jsx';
 import ModulePage from '../../../shared/components/ModulePage.jsx';
 import Modal from '../../../shared/components/Modal.jsx';
 import PaginationBar from '../../../shared/components/PaginationBar.jsx';
@@ -207,7 +209,7 @@ function MatchesPage() {
 
                 <div className="divide-y divide-slate-200">
                   {isSeriesLoading ? (
-                    <div className="p-6 text-center text-sm text-slate-500">Loading series...</div>
+                    <LoadingState label="Loading series" variant="panel" className="m-4 min-h-32" />
                   ) : seriesList.length === 0 ? (
                     <div className="p-6 text-center text-sm text-slate-500">No series available. Create a series first.</div>
                   ) : (
@@ -331,7 +333,9 @@ function MatchesPage() {
                     <tbody className="divide-y divide-slate-100">
                       {isMatchesLoading ? (
                         <tr>
-                          <td colSpan="6" className="px-6 py-8 text-center text-slate-500">Loading matches...</td>
+                          <td colSpan="6" className="px-6 py-6">
+                            <LoadingState label="Loading matches" variant="row" />
+                          </td>
                         </tr>
                       ) : matches.length === 0 ? (
                         <tr>
@@ -386,7 +390,7 @@ function MatchesPage() {
 
                   {isFetching && !isMatchesLoading && (
                     <div className="border-t border-slate-100 bg-white px-4 py-2 text-xs font-medium text-slate-500">
-                      Updating matches...
+                      <LoadingState label="Updating matches" size="sm" variant="inline" />
                     </div>
                   )}
                 </div>
@@ -502,7 +506,11 @@ function MatchesPage() {
               }
               className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
             >
-              {statusUpdateState.isLoading || tossState.isLoading || startState.isLoading || completeState.isLoading ? 'Updating...' : 'Move Status'}
+              {statusUpdateState.isLoading || tossState.isLoading || startState.isLoading || completeState.isLoading ? (
+                <LoadingLabel label="Updating" />
+              ) : (
+                'Move Status'
+              )}
             </button>
           </div>
         </div>

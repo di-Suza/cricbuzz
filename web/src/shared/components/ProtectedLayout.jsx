@@ -5,6 +5,7 @@ import { useLogoutMutation } from '../../features/auth/api/authApi.js';
 import { selectCurrentUser } from '../../features/auth/store/authSlice.js';
 import { getSidebarItems } from '../../features/dashboard/config/sidebarItems.js';
 import { ROLE_LABELS } from '../constants/roles.js';
+import LoadingLabel from './LoadingLabel.jsx';
 
 function ProtectedLayout({ routes }) {
   const navigate = useNavigate();
@@ -75,7 +76,7 @@ function ProtectedLayout({ routes }) {
                 disabled={isLoading}
                 className="h-10 rounded-md border border-[#343b40] bg-[#1a1f20] px-3 text-sm font-semibold text-slate-100 transition hover:border-rose-300 hover:bg-rose-950/40 hover:text-rose-200 focus:outline-none focus:ring-4 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isLoading ? 'Signing out' : 'Logout'}
+                {isLoading ? <LoadingLabel label="Signing out" /> : 'Logout'}
               </button>
             </div>
           </div>
